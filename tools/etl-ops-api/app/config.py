@@ -11,9 +11,12 @@ class Settings(BaseSettings):
     )
 
     auth_disabled: bool = True
+    # Override with DATA_DIR env on hosts where repo layout differs
     data_dir: Path = Path(__file__).resolve().parents[3] / "DATA"
     sqlite_path: Path = Path(__file__).resolve().parents[1] / "data" / "sample.db"
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # Allow Vercel preview/production origins when API is deployed
+    cors_origin_regex: str | None = r"https://.*\.vercel\.app"
     fabric_workspace_id: str = "c5097ffb-b78e-441d-9575-a82bac23cac8"
     fabric_experience: str = "fabric-developer"
     fabric_map_path: Path = Path(__file__).resolve().parents[3] / "DATA" / "fabric_pipeline_map.json"

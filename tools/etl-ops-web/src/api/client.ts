@@ -12,7 +12,15 @@ import type {
   TrendPoint,
 } from "../types";
 
-const BASE = "/api";
+/** Local dev: Vite proxies `/api`. Production: set `VITE_API_URL` in Vercel (e.g. `https://your-api.example.com/api`). */
+export const API_BASE = (import.meta.env.VITE_API_URL?.trim().replace(/\/$/, "") || "/api") as string;
+
+export function apiConnectionHint(): string {
+  if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+    return "Production: deploy the FastAPI backend (tools/etl-ops-api), then set VITE_API_URL in Vercel → Settings → Environment Variables (e.g. https://your-api.example.com/api) and redeploy.";
+  }
+  return "Local: cd tools/etl-ops-api && py -m uvicorn app.main:app --reload --port 8000";
+}
 
 export const FALLBACK_CHAT_PROMPTS = [
   "What failed today?",
@@ -27,7 +35,7 @@ async function fetchWithTimeout(path: string, init: RequestInit = {}, timeoutMs 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(`${BASE}${path}`, { ...init, signal: controller.signal });
+    return await fetch(`${API_BASE}${path}`, { ...init, signal: controller.signal });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       throw new Error(`API timed out after ${timeoutMs / 1000}s — is the backend running on port 8000?`);
@@ -38,10 +46,28 @@ async function fetchWithTimeout(path: string, init: RequestInit = {}, timeoutMs 
   }
 }
 
+async function parseJsonResponse<T>(res: Response, path: string): Promise<T> {
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}: ${path}`);
+  }
+  if (text.trimStart().startsWith("<")) {
+    throw new Error(
+      import.meta.env.PROD && !import.meta.env.VITE_API_URL
+        ? "API not configured — Vercel is returning the web page instead of JSON. Set VITE_API_URL to your hosted FastAPI URL."
+        : "Received HTML instead of JSON — the API may not be running.",
+    );
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(`Invalid JSON from API: ${path}`);
+  }
+}
+
 async function get<T>(path: string, timeoutMs = 20_000): Promise<T> {
   const res = await fetchWithTimeout(path, {}, timeoutMs);
-  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
-  return res.json() as Promise<T>;
+  return parseJsonResponse<T>(res, path);
 }
 
 async function post<T>(path: string, body: unknown, timeoutMs = 90_000): Promise<T> {
@@ -54,11 +80,10 @@ async function post<T>(path: string, body: unknown, timeoutMs = 90_000): Promise
     },
     timeoutMs,
   );
-  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
-  return res.json() as Promise<T>;
+  return parseJsonResponse<T>(res, path);
 }
 
-function toParams(filters: Partial<GlobalFilters> & Record<string, string | number | undefined>): string {
+function toParams(filters: Partial<GlobalFilters> & Record<string, string | number | boolean | undefined>): string {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== "") {

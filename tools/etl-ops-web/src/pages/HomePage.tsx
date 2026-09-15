@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { api } from "../api/client";
+import { api, apiConnectionHint } from "../api/client";
 import { CombinedRunDetailsDrawer } from "../components/CombinedRunDetailsDrawer";
 import { GroupedRunsView } from "../components/GroupedRunsView";
 import { RunDetailsDrawer } from "../components/RunDetailsDrawer";
@@ -104,9 +104,7 @@ export function HomePage() {
       <div className="rounded-xl border border-red-800/50 bg-red-950/30 px-4 py-4 text-sm text-red-200">
         <p className="font-medium">Could not load dashboard data</p>
         <p className="mt-1 text-red-300/90">{(error as Error).message}</p>
-        <p className="mt-2 text-xs text-red-300/70">
-          Start the API: <code className="text-red-200">cd tools/etl-ops-api; py -m uvicorn app.main:app --reload --port 8000</code>
-        </p>
+        <p className="mt-2 text-xs text-red-300/70">{apiConnectionHint()}</p>
       </div>
     );
   }

@@ -1,0 +1,18 @@
+# Render Blueprint — connect repo at https://dashboard.render.com/blueprints
+# Free tier: web service may sleep after ~15 min idle (first request ~30s wake).
+services:
+  - type: web
+    name: etl-ops-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: tools/etl-ops-api
+    buildCommand: pip install -r requirements.txt && python -c "from app.db.sqlite import ensure_sample_db; ensure_sample_db(force=True)"
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      # Rule-based chat works without API keys; switch to agent + GEMINI_API_KEY in dashboard later
+      - key: CHAT_MODE
+        value: rules
