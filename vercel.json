@@ -3,5 +3,11 @@
   "installCommand": "npm ci --prefix tools/etl-ops-web",
   "buildCommand": "npm run build --prefix tools/etl-ops-web",
   "outputDirectory": "tools/etl-ops-web/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://etl-ops-api.onrender.com/api/:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

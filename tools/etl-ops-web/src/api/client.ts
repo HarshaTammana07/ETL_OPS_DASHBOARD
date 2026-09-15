@@ -16,8 +16,11 @@ import type {
 export const API_BASE = (import.meta.env.VITE_API_URL?.trim().replace(/\/$/, "") || "/api") as string;
 
 export function apiConnectionHint(): string {
-  if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
-    return "Production: deploy the FastAPI backend (tools/etl-ops-api), then set VITE_API_URL in Vercel → Settings → Environment Variables (e.g. https://your-api.example.com/api) and redeploy.";
+  if (import.meta.env.PROD) {
+    if (import.meta.env.VITE_API_URL) {
+      return `Using API: ${API_BASE} — if this fails, check CORS on Render and redeploy Vercel after env changes.`;
+    }
+    return "Production uses /api on Vercel (proxied to Render via vercel.json). Push latest vercel.json and redeploy, or set VITE_API_URL=https://etl-ops-api.onrender.com/api and redeploy.";
   }
   return "Local: cd tools/etl-ops-api && py -m uvicorn app.main:app --reload --port 8000";
 }
@@ -53,8 +56,8 @@ async function parseJsonResponse<T>(res: Response, path: string): Promise<T> {
   }
   if (text.trimStart().startsWith("<")) {
     throw new Error(
-      import.meta.env.PROD && !import.meta.env.VITE_API_URL
-        ? "API not configured — Vercel is returning the web page instead of JSON. Set VITE_API_URL to your hosted FastAPI URL."
+      import.meta.env.PROD
+        ? "API returned HTML instead of JSON — redeploy Vercel with the latest vercel.json (proxies /api → Render) or set VITE_API_URL=https://etl-ops-api.onrender.com/api and redeploy."
         : "Received HTML instead of JSON — the API may not be running.",
     );
   }
