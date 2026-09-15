@@ -116,8 +116,10 @@ export const api = {
       }[];
     }>(`/pipelines/runs/${encodeURIComponent(runId)}/tasks${qs ? `?${qs}` : ""}`);
   },
-  failedTasks: (filters: Partial<GlobalFilters> & { limit?: number; offset?: number }) =>
-    get<{ failures: FailedTask[] }>(`/failures/tasks${toParams(filters)}`),
+  failedTasks: (filters: Partial<GlobalFilters> & { limit?: number; offset?: number; noSiteOnly?: boolean }) =>
+    get<{ failures: FailedTask[]; total: number; limit: number; offset: number }>(
+      `/failures/tasks${toParams(filters)}`,
+    ),
   failureOverview: (filters: Partial<GlobalFilters>) =>
     get<{
       totalFailures: number;
@@ -126,6 +128,7 @@ export const api = {
       goldFailures: number;
       pipelineCount: number;
       siteCount: number;
+      noSiteFailures: number;
     }>(`/failures/overview${toParams(filters)}`),
   siteFailureSummary: (filters: Partial<GlobalFilters> & { limit?: number }) =>
     get<{
@@ -143,8 +146,18 @@ export const api = {
     get<{ audits: Record<string, string>[] }>(
       `/failures/sites/${encodeURIComponent(siteCode)}/audit${toParams(filters)}`,
     ),
-  dqIssues: (filters: Partial<GlobalFilters>) =>
-    get<{ issues: Record<string, string>[] }>(`/data-quality/issues${toParams(filters)}`),
+  dqOverview: (filters: Partial<GlobalFilters>) =>
+    get<{
+      totalIssues: number;
+      failedCount: number;
+      zeroRowsCount: number;
+      tableCount: number;
+      pipelineCount: number;
+      nullIssues: number;
+      duplicateIssues: number;
+    }>(`/data-quality/overview${toParams(filters)}`),
+  dqIssues: (filters: Partial<GlobalFilters> & { limit?: number; offset?: number }) =>
+    get<{ issues: Record<string, string>[]; total: number }>(`/data-quality/issues${toParams(filters)}`),
   searchRuns: (params: { runId?: string; pipelineRunId?: string; siteCode?: string; refDate?: string }) =>
     get<{ results: Record<string, string>[] }>(`/runs/search${toParams(params)}`),
   notifications: (filters: Partial<GlobalFilters> & { limit?: number; offset?: number }) =>

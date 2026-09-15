@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar, NAV_ITEMS } from "./AppSidebar";
-import { AppLogo } from "./AppLogo";
 import { GlobalFilterBar } from "./GlobalFilterBar";
 import { useEffectiveFilters } from "../hooks/useEffectiveFilters";
 import { useGlobalFilters } from "../hooks/useGlobalFilters";
@@ -61,12 +60,9 @@ export function AppLayout() {
             <HamburgerIcon />
           </button>
 
-          <div className="flex min-w-0 items-center gap-3">
-            <AppLogo variant="full" />
-            <div className="min-w-0 hidden md:block">
-              <h1 className="truncate text-sm font-semibold text-slate-100">ETL Operations Center</h1>
-              <p className="truncate text-[11px] text-slate-500">Fabric pipeline health & audit</p>
-            </div>
+          <div className="min-w-0 hidden md:block">
+            <h1 className="truncate text-sm font-semibold text-slate-100">ETL Operations Center</h1>
+            <p className="truncate text-[11px] text-slate-500">Fabric pipeline health & audit</p>
           </div>
 
           <div className="ml-auto text-xs font-medium uppercase tracking-wide text-slate-500">{title}</div>

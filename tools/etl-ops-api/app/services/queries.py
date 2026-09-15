@@ -68,6 +68,12 @@ def _filter_clause(filters: GlobalFilters, prefix: str = "pr") -> tuple[str, lis
         clauses.append(f"{prefix}.Status = ?")
         params.append(filters.status)
 
+    if filters.site_code:
+        clauses.append(
+            "EXISTS (SELECT 1 FROM taskaudit ta WHERE ta.RunId = pr.RunId AND ta.SiteCode LIKE ?)"
+        )
+        params.append(f"%{filters.site_code}%")
+
     if not clauses:
         return "", []
     return " AND " + " AND ".join(clauses), params
@@ -77,13 +83,27 @@ def _is_run_scoped(filters: GlobalFilters) -> bool:
     return bool(filters.pipeline_run_id or filters.run_id)
 
 
+def _run_id_match(column: str, value: str) -> tuple[str, list[Any]]:
+    """Exact match for full GUIDs; partial LIKE otherwise."""
+    v = (value or "").strip()
+    if not v:
+        return "1=1", []
+    compact = v.replace("-", "")
+    if len(compact) >= 32:
+        return f"{column} = ?", [v]
+    pattern = v if "%" in v else f"%{v}%"
+    return f"CAST({column} AS TEXT) LIKE ?", [pattern]
+
+
 def _pipelinerun_where(filters: GlobalFilters) -> tuple[str, list[Any]]:
     """Date window or single-run scope for pipelinerun queries."""
     extra_sql, extra_params = _filter_clause(filters)
     if filters.pipeline_run_id:
-        return f"pr.PipelineRunId = ?{extra_sql}", [filters.pipeline_run_id] + extra_params
+        id_sql, id_params = _run_id_match("pr.PipelineRunId", filters.pipeline_run_id)
+        return f"{id_sql}{extra_sql}", id_params + extra_params
     if filters.run_id:
-        return f"pr.RunId = ?{extra_sql}", [filters.run_id] + extra_params
+        id_sql, id_params = _run_id_match("pr.RunId", filters.run_id)
+        return f"{id_sql}{extra_sql}", id_params + extra_params
     date_sql, date_params = _date_range_clause("pr.StartTime", filters)
     return f"{date_sql}{extra_sql}", date_params + extra_params
 
@@ -265,10 +285,20 @@ def _recent_runs_search_clause(q: str | None) -> tuple[str, list[Any]]:
     )
 
 
-def recent_pipeline_runs(filters: GlobalFilters, q: str | None = None) -> list[dict[str, Any]]:
-    date_sql, date_params = _date_range_clause("pr.StartTime", filters)
-    extra_sql, extra_params = _filter_clause(filters)
+def _recent_runs_where(filters: GlobalFilters, q: str | None = None) -> tuple[str, list[Any]]:
+    if filters.pipeline_run_id or filters.run_id:
+        where_sql, params = _pipelinerun_where(filters)
+    else:
+        date_sql, date_params = _date_range_clause("pr.StartTime", filters)
+        extra_sql, extra_params = _filter_clause(filters)
+        where_sql = date_sql + extra_sql
+        params = date_params + extra_params
     search_sql, search_params = _recent_runs_search_clause(q)
+    return where_sql + search_sql, params + search_params
+
+
+def recent_pipeline_runs(filters: GlobalFilters, q: str | None = None) -> list[dict[str, Any]]:
+    where_sql, params = _recent_runs_where(filters, q)
 
     with get_connection() as conn:
         rows = conn.execute(
@@ -277,28 +307,26 @@ def recent_pipeline_runs(filters: GlobalFilters, q: str | None = None) -> list[d
                    pr.TargetName, pr.SourceSystem, pr.Status, pr.StartTime, pr.EndTime,
                    pr.SuccessTasks, pr.FailedTasks, pr.TotalTasks
             FROM pipelinerun pr
-            WHERE {date_sql}{extra_sql}{search_sql}
+            WHERE {where_sql}
             ORDER BY pr.StartTime DESC
             LIMIT ? OFFSET ?
             """,
-            date_params + extra_params + search_params + [filters.limit, filters.offset],
+            params + [filters.limit, filters.offset],
         ).fetchall()
     return attach_fabric_urls(_rows_to_dicts(rows))
 
 
 def count_recent_pipeline_runs(filters: GlobalFilters, q: str | None = None) -> int:
-    date_sql, date_params = _date_range_clause("pr.StartTime", filters)
-    extra_sql, extra_params = _filter_clause(filters)
-    search_sql, search_params = _recent_runs_search_clause(q)
+    where_sql, params = _recent_runs_where(filters, q)
 
     with get_connection() as conn:
         row = conn.execute(
             f"""
             SELECT COUNT(*) AS cnt
             FROM pipelinerun pr
-            WHERE {date_sql}{extra_sql}{search_sql}
+            WHERE {where_sql}
             """,
-            date_params + extra_params + search_params,
+            params,
         ).fetchone()
     return int(row["cnt"] or 0)
 
@@ -873,22 +901,21 @@ def _normalize_failure_row(row: dict[str, Any]) -> dict[str, Any]:
     return row
 
 
-def failed_tasks(filters: GlobalFilters) -> list[dict[str, Any]]:
+def _failed_tasks_where(filters: GlobalFilters, *, no_site_only: bool = False) -> tuple[str, list[Any]]:
     date_sql, date_params = _date_range_clause("tq.StartTime", filters)
-
     extra_clauses: list[str] = []
     extra_params: list[Any] = []
+    site_expr = _resolved_site_code_sql()
 
     pattern = _config_name_pattern(filters.config_name)
     if pattern:
         extra_clauses.append("pr.ConfigName LIKE ? COLLATE NOCASE")
         extra_params.append(pattern)
-    if filters.site_code:
-        extra_clauses.append(
-            "(tq.SiteCode LIKE ? OR tc.SiteCode LIKE ?)"
-        )
-        like = f"%{filters.site_code}%"
-        extra_params.extend([like, like])
+    if no_site_only:
+        extra_clauses.append(f"({site_expr}) = ''")
+    elif filters.site_code:
+        extra_clauses.append(f"upper({site_expr}) = upper(?)")
+        extra_params.append(filters.site_code.strip())
     if filters.method:
         extra_clauses.append("tc.Method LIKE ?")
         extra_params.append(f"%{filters.method}%")
@@ -897,6 +924,27 @@ def failed_tasks(filters: GlobalFilters) -> list[dict[str, Any]]:
         extra_params.append(filters.target_name)
 
     extra_sql = (" AND " + " AND ".join(extra_clauses)) if extra_clauses else ""
+    return f"tq.Status = 'FAILED' AND {date_sql}{extra_sql}", date_params + extra_params
+
+
+def count_failed_tasks(filters: GlobalFilters, *, no_site_only: bool = False) -> int:
+    where_sql, params = _failed_tasks_where(filters, no_site_only=no_site_only)
+    with get_connection() as conn:
+        row = conn.execute(
+            f"""
+            SELECT COUNT(*) AS cnt
+            FROM taskqueue tq
+            JOIN pipelinerun pr ON pr.RunId = tq.RunId
+            LEFT JOIN taskconfig tc ON tc.TaskConfigId = tq.TaskConfigId
+            WHERE {where_sql}
+            """,
+            params,
+        ).fetchone()
+    return int(row["cnt"] or 0)
+
+
+def failed_tasks(filters: GlobalFilters, *, no_site_only: bool = False) -> list[dict[str, Any]]:
+    where_sql, params = _failed_tasks_where(filters, no_site_only=no_site_only)
 
     with get_connection() as conn:
         rows = conn.execute(
@@ -924,22 +972,18 @@ def failed_tasks(filters: GlobalFilters) -> list[dict[str, Any]]:
             FROM taskqueue tq
             JOIN pipelinerun pr ON pr.RunId = tq.RunId
             LEFT JOIN taskconfig tc ON tc.TaskConfigId = tq.TaskConfigId
-            WHERE tq.Status = 'FAILED'
-              AND {date_sql}{extra_sql}
+            WHERE {where_sql}
             ORDER BY tq.StartTime DESC
             LIMIT ? OFFSET ?
             """,
-            date_params + extra_params + [filters.limit, filters.offset],
+            params + [filters.limit, filters.offset],
         ).fetchall()
 
     cleaned = [_normalize_failure_row(dict(r)) for r in rows]
     return attach_fabric_urls(cleaned)
 
 
-def site_failure_summary(filters: GlobalFilters) -> list[dict[str, Any]]:
-    """Aggregate failed tasks by valid SiteCode for the Site Failures page."""
-    date_sql, date_params = _date_range_clause("tq.StartTime", filters)
-
+def _failure_task_extra_clause(filters: GlobalFilters) -> tuple[str, list[Any]]:
     extra_clauses: list[str] = []
     extra_params: list[Any] = []
     pattern = _config_name_pattern(filters.config_name)
@@ -949,26 +993,45 @@ def site_failure_summary(filters: GlobalFilters) -> list[dict[str, Any]]:
     if filters.target_name:
         extra_clauses.append("pr.TargetName = ?")
         extra_params.append(filters.target_name)
-
     extra_sql = (" AND " + " AND ".join(extra_clauses)) if extra_clauses else ""
+    return extra_sql, extra_params
+
+
+def _resolved_site_code_sql() -> str:
+    """SQL expression: best valid site code from taskqueue or taskconfig."""
+    return """
+        CASE
+            WHEN length(tq.SiteCode) BETWEEN 2 AND 12
+                 AND instr(tq.SiteCode, char(123)) = 0
+                 AND instr(lower(tq.SiteCode), 'error') = 0
+                 AND instr(tq.SiteCode, char(92)) = 0
+            THEN tq.SiteCode
+            WHEN length(tc.SiteCode) BETWEEN 2 AND 12
+                 AND instr(tc.SiteCode, char(123)) = 0
+                 AND instr(lower(tc.SiteCode), 'error') = 0
+            THEN tc.SiteCode
+            ELSE ''
+        END
+    """
+
+
+def _bronze_layer_sql(prefix: str = "pr") -> str:
+    return f"{prefix}.TargetName IN ('BR', 'BRZ')"
+
+
+def site_failure_summary(filters: GlobalFilters) -> list[dict[str, Any]]:
+    """Aggregate failed Bronze tasks by valid SiteCode (sites only exist on BR layer)."""
+    date_sql, date_params = _date_range_clause("tq.StartTime", filters)
+    extra_sql, extra_params = _failure_task_extra_clause(filters)
+    site_expr = _resolved_site_code_sql()
+    bronze_sql = f" AND {_bronze_layer_sql()}"
 
     with get_connection() as conn:
         rows = conn.execute(
             f"""
             SELECT * FROM (
                 SELECT
-                    CASE
-                        WHEN length(tq.SiteCode) BETWEEN 2 AND 12
-                             AND instr(tq.SiteCode, char(123)) = 0
-                             AND instr(lower(tq.SiteCode), 'error') = 0
-                             AND instr(tq.SiteCode, char(92)) = 0
-                        THEN tq.SiteCode
-                        WHEN length(tc.SiteCode) BETWEEN 2 AND 12
-                             AND instr(tc.SiteCode, char(123)) = 0
-                             AND instr(lower(tc.SiteCode), 'error') = 0
-                        THEN tc.SiteCode
-                        ELSE ''
-                    END AS SiteCode,
+                    {site_expr} AS SiteCode,
                     MAX(COALESCE(NULLIF(tq.DataBaseName, ''), NULLIF(tc.DataBaseName, ''), '')) AS DataBaseName,
                     MAX(COALESCE(NULLIF(tq.SiteName, ''), '')) AS SiteName,
                     COUNT(*) AS failure_count,
@@ -979,7 +1042,7 @@ def site_failure_summary(filters: GlobalFilters) -> list[dict[str, Any]]:
                 JOIN pipelinerun pr ON pr.RunId = tq.RunId
                 LEFT JOIN taskconfig tc ON tc.TaskConfigId = tq.TaskConfigId
                 WHERE tq.Status = 'FAILED'
-                  AND {date_sql}{extra_sql}
+                  AND {date_sql}{bronze_sql}{extra_sql}
                 GROUP BY 1
             ) site_agg
             WHERE SiteCode != ''
@@ -993,14 +1056,8 @@ def site_failure_summary(filters: GlobalFilters) -> list[dict[str, Any]]:
 
 def failure_overview(filters: GlobalFilters) -> dict[str, Any]:
     date_sql, date_params = _date_range_clause("tq.StartTime", filters)
-    extra_sql, extra_params = "", []
-    pattern = _config_name_pattern(filters.config_name)
-    if pattern:
-        extra_sql = " AND pr.ConfigName LIKE ? COLLATE NOCASE"
-        extra_params = [pattern]
-    if filters.target_name:
-        extra_sql += " AND pr.TargetName = ?"
-        extra_params.append(filters.target_name)
+    extra_sql, extra_params = _failure_task_extra_clause(filters)
+    site_expr = _resolved_site_code_sql()
 
     with get_connection() as conn:
         row = conn.execute(
@@ -1010,71 +1067,118 @@ def failure_overview(filters: GlobalFilters) -> dict[str, Any]:
                 SUM(CASE WHEN pr.TargetName = 'BR' THEN 1 ELSE 0 END) AS bronze_failures,
                 SUM(CASE WHEN pr.TargetName = 'SL' THEN 1 ELSE 0 END) AS silver_failures,
                 SUM(CASE WHEN pr.TargetName = 'GL' THEN 1 ELSE 0 END) AS gold_failures,
-                COUNT(DISTINCT pr.ConfigName) AS pipeline_count
+                COUNT(DISTINCT pr.ConfigName) AS pipeline_count,
+                COUNT(DISTINCT CASE WHEN ({site_expr}) != '' THEN ({site_expr}) END) AS site_count,
+                SUM(CASE WHEN ({site_expr}) = '' THEN 1 ELSE 0 END) AS no_site_failures
             FROM taskqueue tq
             JOIN pipelinerun pr ON pr.RunId = tq.RunId
+            LEFT JOIN taskconfig tc ON tc.TaskConfigId = tq.TaskConfigId
             WHERE tq.Status = 'FAILED'
               AND {date_sql}{extra_sql}
             """,
             date_params + extra_params,
         ).fetchone()
 
-    sites = site_failure_summary(GlobalFilters(**{**filters.model_dump(), "limit": 500}))
     return {
         "totalFailures": row["total_failures"] or 0,
         "bronzeFailures": row["bronze_failures"] or 0,
         "silverFailures": row["silver_failures"] or 0,
         "goldFailures": row["gold_failures"] or 0,
         "pipelineCount": row["pipeline_count"] or 0,
-        "siteCount": len(sites),
+        "siteCount": row["site_count"] or 0,
+        "noSiteFailures": row["no_site_failures"] or 0,
     }
 
 
 def site_audit_summary(site_code: str, filters: GlobalFilters) -> list[dict[str, Any]]:
-    date_sql, date_params = _date_range_clause("ta.StartTime", filters)
-
-    with get_connection() as conn:
-        rows = conn.execute(
-            f"""
-            SELECT ta.StartTime, ta.TaskName, ta.Status, ta.RowsRead, ta.RowsWritten,
-                   ta.DurationSeconds, ta.DataBaseName, ta.SiteName, ta.PipelineRunId
-            FROM taskaudit ta
-            WHERE ta.SiteCode = ?
-              AND {date_sql}
-            ORDER BY ta.StartTime DESC
-            LIMIT ?
-            """,
-            [site_code] + date_params + [filters.limit],
-        ).fetchall()
-    return _rows_to_dicts(rows)
+    """Failed tasks for a site (kept for API compatibility)."""
+    site_filters = GlobalFilters(**{**filters.model_dump(), "site_code": site_code})
+    return failed_tasks(site_filters)
 
 
-def data_quality_issues(filters: GlobalFilters) -> list[dict[str, Any]]:
+def _dq_issue_filters(filters: GlobalFilters) -> tuple[str, list[Any]]:
+    """Shared date + catalog filters for dataquality queries (etlconfig join)."""
     date_sql, date_params = _date_range_clause("dq.CreatedAt", filters)
-
     config_filter = ""
     config_params: list[Any] = []
     pattern = _config_name_pattern(filters.config_name)
     if pattern:
-        config_filter = " AND pr.ConfigName LIKE ? COLLATE NOCASE"
+        config_filter += " AND ec.ConfigName LIKE ? COLLATE NOCASE"
         config_params.append(pattern)
+    if filters.target_name:
+        config_filter += " AND ec.TargetName = ?"
+        config_params.append(filters.target_name)
+    where = (
+        f"dq.ValidationStatus NOT IN ('PASS', 'SUCCESS', 'PASSED', '')"
+        f" AND {date_sql}{config_filter}"
+    )
+    return where, date_params + config_params
 
+
+def count_data_quality_issues(filters: GlobalFilters) -> int:
+    where, params = _dq_issue_filters(filters)
+    with get_connection() as conn:
+        row = conn.execute(
+            f"""
+            SELECT COUNT(*) AS c
+            FROM dataquality dq
+            LEFT JOIN etlconfig ec ON ec.ConfigId = dq.ConfigId
+            WHERE {where}
+            """,
+            params,
+        ).fetchone()
+    return int(row["c"] if row else 0)
+
+
+def data_quality_overview(filters: GlobalFilters) -> dict[str, Any]:
+    where, params = _dq_issue_filters(filters)
+    with get_connection() as conn:
+        row = conn.execute(
+            f"""
+            SELECT
+                COUNT(*) AS totalIssues,
+                SUM(CASE WHEN dq.ValidationStatus = 'FAILED' THEN 1 ELSE 0 END) AS failedCount,
+                SUM(CASE WHEN dq.ValidationStatus = 'ZERO_ROWS' THEN 1 ELSE 0 END) AS zeroRowsCount,
+                COUNT(DISTINCT dq.TableName) AS tableCount,
+                COUNT(DISTINCT ec.ConfigName) AS pipelineCount,
+                SUM(CASE WHEN CAST(dq.NullCount AS INTEGER) > 0 THEN 1 ELSE 0 END) AS nullIssues,
+                SUM(CASE WHEN CAST(dq.DuplicateCount AS INTEGER) > 0 THEN 1 ELSE 0 END) AS duplicateIssues
+            FROM dataquality dq
+            LEFT JOIN etlconfig ec ON ec.ConfigId = dq.ConfigId
+            WHERE {where}
+            """,
+            params,
+        ).fetchone()
+    if not row:
+        return {
+            "totalIssues": 0,
+            "failedCount": 0,
+            "zeroRowsCount": 0,
+            "tableCount": 0,
+            "pipelineCount": 0,
+            "nullIssues": 0,
+            "duplicateIssues": 0,
+        }
+    return dict(row)
+
+
+def data_quality_issues(filters: GlobalFilters) -> list[dict[str, Any]]:
+    where, params = _dq_issue_filters(filters)
     with get_connection() as conn:
         rows = conn.execute(
             f"""
-            SELECT dq.CreatedAt, dq.TableName, dq.RowCount, dq.NullCount,
-                   dq.DuplicateCount, dq.ValidationStatus, dq.PipelineRunId,
-                   pr.ConfigName, pr.TargetName
+            SELECT dq.DqId, dq.CreatedAt, dq.TableName, dq.RowCount, dq.NullCount,
+                   dq.DuplicateCount, dq.ValidationStatus, dq.PipelineRunId, dq.RunId,
+                   dq.ConfigId, ec.ConfigName, ec.TargetName, ec.PipelineName
             FROM dataquality dq
-            LEFT JOIN pipelinerun pr ON pr.RunId = dq.RunId
-            WHERE dq.ValidationStatus NOT IN ('PASS', 'SUCCESS', '')
-              AND {date_sql}{config_filter}
+            LEFT JOIN etlconfig ec ON ec.ConfigId = dq.ConfigId
+            WHERE {where}
             ORDER BY dq.CreatedAt DESC
             LIMIT ? OFFSET ?
             """,
-            date_params + config_params + [filters.limit, filters.offset],
+            params + [filters.limit, filters.offset],
         ).fetchall()
-    return _rows_to_dicts(rows)
+    return attach_fabric_urls(_rows_to_dicts(rows))
 
 
 def search_runs(

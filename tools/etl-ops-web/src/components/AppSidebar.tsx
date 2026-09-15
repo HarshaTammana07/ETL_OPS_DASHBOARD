@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import clsx from "clsx";
+import { AppLogo } from "./AppLogo";
 
 export interface NavItem {
   to: string;
@@ -34,15 +35,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
         <path d="M4 19V5M4 19h16M8 17V11M12 17V7M16 17v-4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    to: "/alerts",
-    label: "Alerts",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-        <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5M10 21a2 2 0 0 0 4 0" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -85,6 +77,15 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    to: "/alerts",
+    label: "Alerts",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+        <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5M10 21a2 2 0 0 0 4 0" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     to: "/chat",
     label: "Chat",
     icon: (
@@ -103,6 +104,14 @@ export function AppSidebar({ items, collapsed }: AppSidebarProps) {
         collapsed ? "w-[4.25rem]" : "w-56",
       )}
     >
+      <div
+        className={clsx(
+          "flex h-14 shrink-0 items-center border-b border-slate-800",
+          collapsed ? "justify-center px-2" : "px-3",
+        )}
+      >
+        {collapsed ? <AppLogo variant="mark" /> : <AppLogo variant="full" />}
+      </div>
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto p-2 pt-3">
         {items.map((item) => (
           <NavLink
