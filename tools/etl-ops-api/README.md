@@ -12,6 +12,10 @@ py -m uvicorn app.main:app --reload --port 8000
 
 OpenAPI docs: http://localhost:8000/docs
 
+## Production (Render / Railway)
+
+See **[DEPLOY.md](../../DEPLOY.md)** at repo root — includes free Render blueprint (`render.yaml`) and Vercel `VITE_API_URL` setup.
+
 ## Local data
 
 On first start, CSV files from `DATA/` are loaded into `data/sample.db` (gitignored).

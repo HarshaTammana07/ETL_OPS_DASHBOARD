@@ -1,0 +1,9 @@
+# Optional Railway deploy — https://railway.app/new
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install -r requirements.txt && python -c \"from app.db.sqlite import ensure_sample_db; ensure_sample_db(force=True)\""
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/api/health"
+restartPolicyType = "ON_FAILURE"
