@@ -1,0 +1,27 @@
+{
+  "workspaceId": "c5097ffb-b78e-441d-9575-a82bac23cac8",
+  "experience": "fabric-developer",
+  "_comment": "Each Fabric pipeline has its own artifact GUID (from browser URL after /pipelines/). Do NOT reuse IDs across pipelines.",
+  "_howToFind": "In Fabric: open the pipeline → copy GUID from URL → add below under the matching ConfigId / PipelineName",
+
+  "pipelinesByConfigId": {
+    "7": "a3401580-ada4-49c7-8efe-55a94295a020",
+    "8": "a3401580-ada4-49c7-8efe-55a94295a020",
+    "34": "189b74e5-ef11-4ee4-afb8-4a9b8a576f30",
+    "35": "189b74e5-ef11-4ee4-afb8-4a9b8a576f30"
+  },
+
+  "pipelinesByPipelineName": {
+    "pl_dose": "a3401580-ada4-49c7-8efe-55a94295a020",
+    "pl_execute_form_questionanswers": "REPLACE_WITH_FORM_QA_ARTIFACT_GUID"
+  },
+
+  "pipelinesByConfigName": {
+    "SAMMS Dose Bronze Pipeline": "a3401580-ada4-49c7-8efe-55a94295a020",
+    "SAMMS Dose Silver Pipeline": "a3401580-ada4-49c7-8efe-55a94295a020"
+  },
+
+  "_artifactNotes": {
+    "a3401580-ada4-49c7-8efe-55a94295a020": "pl_dose — NOT FormQuestionAnswers"
+  }
+}

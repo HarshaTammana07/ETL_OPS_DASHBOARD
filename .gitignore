@@ -1,0 +1,22 @@
+# Local SQLite DB (built from CSV)
+tools/etl-ops-api/data/
+*.db
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Env
+.env
+.env.local
+
+# Build
+dist/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

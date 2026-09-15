@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply overflow-hidden bg-slate-950 text-slate-100 antialiased;
+}
+
+/* Native date picker icon is dark by default — invisible on slate-950 */
+input[type="date"].date-field {
+  color-scheme: dark;
+  min-width: 10.5rem;
+}
+
+/* Hide native icon — we render a visible calendar button instead */
+input[type="date"].date-field::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 2.25rem;
+  height: 100%;
+  cursor: pointer;
+}

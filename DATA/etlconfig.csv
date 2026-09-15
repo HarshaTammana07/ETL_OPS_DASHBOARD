@@ -1,0 +1,247 @@
+ConfigId,ConfigName,PipelineName,PipelinePath,TransformationModule,SourceSystem,SourceType,TargetName,EnvironmentName,PipelineDependency,ExecutionSequence,TriggerType,TriggerFrequency,TriggeredBy,IsActive,ConnectionConfig,CreatedAt,CreatedBy,ModifiedAt,ModifiedBy
+10,Verity Bronze Pipeline,nb_veritystream_src_to_brz,/notebooks/nb_veritystream_src_to_brz,,VerityStream,API,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,"{
+        \"auth_type\": \"JWT\",
+        \"token_url\": \"https://api.veritystream.cloud/services/oauth/api/authentication/jwt/validate\",
+        \"token_response_path\": \"Value\",
+        \"token_request_type\": \"json\",
+        \"token_body\": {
+            \"Requester\": {
+                \"Key\":      \"{requester_key}\",
+                \"Id\":       \"{requester_id}\",
+                \"Secret\":   \"{requester_secret}\",
+                \"Resource\": \"{requester_resource}\"
+            },
+            \"Parameters\": {}
+        },
+        \"request_headers\": {
+            \"Content-Type\": \"application/json\"
+        },
+        \"secrets\": {
+            \"requester_key\":      \"VERITY-REQUESTER-KEY\",
+            \"requester_id\":       \"VERITY-REQUESTER-ID\",
+            \"requester_secret\":   \"VERITY-REQUESTER-SECRET\",
+            \"requester_resource\": \"VERITY-RESOURCE\"
+        }
+    }",2026-06-04T10:24:56.627Z,Dev_AK,2026-06-05T01:38:42.817Z,Dev_AK
+103,Active Directory Bronze Pipeline,nb_activedirectory_src_to_brz,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/ActiveDirectory/nb_activedirectory_src_to_brz,,Active Directory,API,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,"{
+    \"auth_type\": \"OAUTH2\",
+    \"token_url\": \"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token\",
+    \"token_request_type\": \"form\",
+    \"token_body\": {
+        \"client_id\": \"{client_id}\",
+        \"client_secret\": \"{client_secret}\",
+        \"scope\": \"https://graph.microsoft.com/.default\",
+        \"grant_type\": \"client_credentials\"
+    },
+    \"token_response_path\": \"access_token\",
+    \"filter_expression\": \"OU=BHG Users,DC=BHG,DC=local\",
+    \"request_headers\": {},
+    \"secrets\": {
+        \"tenant_id\": \"DATAPIPELINE-SVC-TENANID\",
+        \"client_id\": \"ENTRA-ETL-SVC-ClientID\",
+        \"client_secret\": \"ENTRA-ETL-SVC-SECRET\"
+    }
+}",2026-07-27T04:39:43.449Z,Dev_AK,2026-07-27T04:39:43.449Z,Dev_AK
+73,Alloy Bronze Incidents Pipeline,nb_alloy_src_to_brz,/notebooks/nb_execute_alloyapi,,ALLOY,API,BR,DEV,ALLOY_MASTER,1,SCHEDULED,DAILY,Fabric,1,"{
+            \"auth_type\"          : \"OAUTH2\",
+            \"token_url\"          : \"https://BHGRecovery.AlloyService.com/API/token\",
+            \"token_request_type\" : \"form\",
+            \"token_response_path\": \"access_token\",
+            \"jwt_mapping\"        : null,
+            \"request_headers\"    : {
+                \"Accept\": \"application/json\"
+            },
+            \"request_body\"       : {},
+            \"pagination_style\"   : \"url_param\",
+            \"secrets\"            : {
+                \"client_id\"    : \"ALLOY-CLIENT-ID\",
+                \"client_secret\": \"ALLOY-CLIENT-SECRET\"
+            }
+        }",2026-06-18T07:29:33.614Z,Dev_AK,2026-06-18T07:29:33.614Z,Dev_AK
+135,CallBackList Bronze Pipeline,nb_callback_src_to_brz,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Callback_Lists/nb_callback_src_to_brz,,Salesforce,API,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,"{
+      \"auth_type\":\"BASIC\",
+      \"request_headers\":{
+        \"Accept\":\"application/json\"
+      },
+      \"request_body\":{},
+      \"secrets\":{
+        \"username\":\"SALESFORCE-USERNAME\",
+        \"password\":\"SALESFORCE-PASSWORD\",
+        \"security_token\":\"SALESFORCE-SECURITY-TOKEN\",
+        \"domain\":\"SALESFORCE-DOMAIN\"
+      }
+    }",2026-08-26T18:26:49.122Z,DEV_YP,2026-08-26T18:26:49.122Z,DEV_YP
+94,chatmeter Bronze Pipeline,nb_chatmeter_src_to_brz,/notebooks/nb_chatmeter_src_to_brz,,Chatmeter,API,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,"{\"auth_type\":\"OAUTH2\",\"token_url\":\"https://live.chatmeter.com/v5/login\",\"token_body\":{\"username\":\"{username}\",\"password\":\"{password}\"},\"token_response_path\":\"token\",\"token_prefix\":\"\",\"secrets\":{\"username\":\"CHATMETER-USER-NAME\",\"password\":\"CHATMETER-PASSWORD\"},\"request_headers\":{},\"campaigns_url\":\"https://live.chatmeter.com/v5/reviewBuilder/campaign/get\"}",2026-07-08T03:06:46.952Z,Dev_AK,2026-07-08T03:06:46.952Z,Dev_AK
+1,UKG Bronze Pipeline,nb_ukg_src_to_brz,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/UKG/nb_ukg_src_to_brz,,UKG,API,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,"{
+  \"auth_type\":\"BASIC\",
+  \"request_headers\":{
+    \"Accept\":\"application/json\",
+    \"US-CUSTOMER-API-KEY\":\"{api_key}\"
+  },
+  \"request_body\":{},
+  \"secrets\":{
+    \"api_key\":\"UKG-API-KEY\",
+    \"username\":\"UKG-USER-NAME\",
+    \"password\":\"UKG-CREDS\"
+  }
+}",2026-05-31T16:22:22.162Z,DEV_YP,2026-06-05T01:00:57.318Z,DEV_YP
+119,SAMMS P1/P2 Assessments Silver,pl_p1p2_assessments,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_p1p2_assessments,,Bronze Lakehouse,Table,SL,DEV,,2,SCHEDULE,DAILY,Fabric,1,,2026-08-08T10:35:00.452Z,DEV_YP,2026-08-08T10:35:00.452Z,DEV_YP
+82,Salesforce Bronze Pipeline,nb_salesforce_src_to_brz,/notebooks/nb_salesforce_execute,,SALESFORCE,API,BR,DEV,SALESFORCE_MASTER,1,SCHEDULE,DAILY,Fabric,1,"{
+        \"auth_type\":\"SALESFORCE\",
+        \"secrets\":{
+            \"username\":\"SALESFORCE-USERNAME\",
+            \"password\":\"SALESFORCE-PASSWORD\",
+            \"security_token\":\"SALESFORCE-SECURITY-TOKEN\",
+            \"domain\":\"SALESFORCE-DOMAIN\"
+        }
+    }",2026-07-06T19:46:51.680Z,DEV_SP,2026-07-06T19:46:51.680Z,DEV_SP
+33,SAMMS FormAnswerSignatures Gold Pipeline,pl_execute_pipeline_answersignature,/pipelines/Execute_Pipeline_AnswerSignature,Versioned Gold Publish,Warehouse,TABLE,GL,DEV,FORMANSWERSIGNATURES_SILVER,3,SCHEDULE,DAILY,Fabric,0,{},2026-06-05T19:47:59.896Z,DEV_HT,2026-08-25T10:04:27.489Z,DEV_JR
+30,SAMMS FormQuestionAnswers Gold Pipeline,pl_execute_form_questionanswers,/pipelines/Execute_Form_QuestionAnswer,Versioned Gold Publish,Warehouse,TABLE,GL,DEV,FORMQUESTIONANSWERS_SILVER,3,SCHEDULE,DAILY,Fabric,0,{},2026-06-05T17:02:42.889Z,DEV_HT,2026-08-25T10:04:27.489Z,DEV_JR
+120,SAMMS P1/P2 Assessments Gold,pl_p1p2_assessments,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_p1p2_assessments,,Silver Lakehouse,Table,GL,DEV,,3,SCHEDULE,DAILY,Fabric,1,,2026-08-08T10:35:00.452Z,DEV_YP,2026-08-25T10:04:27.489Z,DEV_JR
+3,UKG Gold Pipeline,nb_ukg_gold,/notebooks/nb_ukg_gold_f,/notebooks/nb_ukg_gold_transformations,UKG,TABLE,GL,DEV,UKG_SILVER,3,SCHEDULE,DAILY,Fabric,0,{},2026-05-31T16:22:44.270Z,DEV_YP,2026-08-25T10:04:27.489Z,DEV_JR
+105,Active Directory Gold Pipeline,nb_activedirectory_slv_to_gld,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/ActiveDirectory/nb_activedirectory_slv_to_gld,,Active Directory,TABLE,GL,DEV,,3,SCHEDULE,DAILY,Fabric,1,"{}",2026-07-27T11:03:03.716Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+13,pl_3p_Balances,Gold_to_Gold,/notebooks/nb_execute_pipeline,,Gold,FABRIC,GL,DEV,ayx.ThirdPartyARiInDBpats.ClaimLineItemActivitypats.ClaimLineItempats.Claimsctrl.Locationsctrl.PayorFeeType,1,SCHEDULE,DAILY,Fabric,0,{},2026-06-04T10:46:18.314Z,Priyambada,2026-08-25T10:04:27.489Z,DEV_JR
+91,Bronze Conferdeploy,nb_conferdeploy_src_to_brz,/notebooks/nb_conferdeploy_execute,,Conferdeploy,API,BR,DEV,,1,SCHEDULED,DAILY,Fabric,1,"{
+        \"auth_type\": \"API_KEY\",
+        \"request_headers\": {
+            \"X-Auth-Token\": \"{cb_auth_token}\",
+            \"Content-Type\": \"application/json\"
+        },
+        \"secrets\": {
+            \"cb_auth_token\": \"CARBONBLACK-API-KEY\"
+        }
+    }",2026-06-30T12:13:53.089Z,Dev_AK,2026-06-30T12:13:53.089Z,Dev_AK
+37,KnowBe4 Bronze Pipeline,nb_knowbe4_src_to_brz,/notebooks/nb_knowbe4_src_to_brz,,KNOWBE4,API,BR,DEV,KNOWBE4_MASTER,1,SCHEDULE,DAILY,Fabric,1,"{
+      \"auth_type\":\"BEARER\",
+      \"request_headers\":{
+        \"Authorization\":\"Bearer {token}\",
+        \"Content-Type\":\"application/json\"
+      },
+      \"secrets\":{
+        \"token\":\"KNOWBE4-TOKEN\"
+      }
+    }",2026-06-16T08:03:36.704Z,DEV_SP,2026-06-16T08:03:36.704Z,DEV_SP
+40,ZOOM API Bronze Pipeline,nb_zoom_src_to_brz,/notebooks/nb_zoomapi_bronze,,Zoom,API,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,"{
+    \"auth_type\": \"OAUTH2\",
+    \"token_url\": \"https://zoom.us/oauth/token?grant_type=account_credentials&account_id=dos9hQOPReuYUFaFbsCoRA\",
+    \"base_url\": \"https://api.zoom.us/v2\",
+    \"secrets\": {
+        \"zoom_password\": \"ZOOM-PASSWORD\"
+    }
+}",2026-06-16T10:19:59.544Z,Dev_AK,2026-06-16T10:19:59.544Z,Dev_AK
+79,Absolute Bronze Inventory Pipeline,nb_absolute_src_to_brz,/notebooks/nb_absolute_execute,,Absolute,API,BR,DEV,Absolute_MASTER,1,SCHEDULED,DAILY,Fabric,1,"{
+    \"auth_type\": \"JWS\",
+    \"base_url\": \"https://api.us.absolute.com/jws/validate\",
+    \"secrets\": {
+        \"token_id\": \"ABSOLUTE-TOKEN\",
+        \"token_secret\": \"ABSOLUTE-SECRET\"
+    }
+}",2026-06-19T10:12:30.124Z,Dev_AK,2026-06-19T10:12:30.124Z,Dev_AK
+84,Salesforce Gold Pipeline,nb_salesforce_slv_to_gld,/notebooks/nb_salesforce_slv_to_gld,/notebooks/nb_salesforce_gld_transformations,SALESFORCE,TABLE,GL,DEV,SALESFORCE_SILVER,3,SCHEDULE,DAILY,Fabric,1,,2026-07-06T19:53:07.699Z,DEV_SP,2026-08-25T10:04:27.489Z,DEV_SP
+128,OneDrive - Overdue Course Gold Pipeline,nb_overduecourses_slv_to_gld,/notebooks/nb_overduecourses_slv_to_gld,,OneDrive - Overdue Course,TABLE,GL,DEV,OverdueCourses_Silver,3,SCHEDULE,DAILY,Fabric,1,{},2026-08-20T17:41:05.477Z,Dev_CS,2026-08-25T10:04:27.489Z,DEV_JR
+113,Azure SQL Alteryx-01 Gold,nb_azuresql_01_slv_to_gld,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Azuresql/nb_azuresql_slv_to_gld,,Azure SQL,TABLE,GL,DEV,,2,SCHEDULED,WEEKLY,Fabric,1,{},2026-07-31T04:20:43.151Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+122,OffWeek Counseling Gold Pipeline,nb_offweekcounseling_slv_to_gld,/notebooks/nb_offweekcounseling_slv_to_gld,,OffWeek Counseling,TABLE,GL,DEV,OffWeekCounseling_Silver,2,SCHEDULE,DAILY,Fabric,1,{},2026-08-08T10:23:50.584Z,Dev_CS,2026-08-25T10:04:27.489Z,DEV_JR
+90,SAMMS P1 Reference Gold Pipeline,Execute_P1_Reference,/pipelines/Execute_P1_Reference,Versioned Gold Publish,SAMMS,TABLE,GL,DEV,P1_REFERENCE_SILVER,3,SCHEDULE,DAILY,Fabric,1,{},2026-06-25T17:01:27.323Z,DEV_HT,2026-08-26T19:32:04.201Z,DEV_HT
+4,8x8 Bronze Pipeline,nb_8x8_src_to_brz,/notebooks/nb_8x8_src_to_brz,,8X8,API,BR,DEV,8X8_MASTER,1,SCHEDULE,DAILY,Fabric,1,"{
+      \"auth_type\":\"BEARER\",
+      \"request_headers\":{
+        \"Accept\":\"application/json\"
+      },
+      \"secrets\":{
+        \"client_cred\":\"8X8-CLIENT-CRED\",
+        \"token\":\"8X8-TOKEN\"
+      }
+    }",2026-06-02T14:17:20.207Z,DEV_SP,2026-06-02T14:17:20.207Z,DEV_SP
+117,Patient Services Gold Pipeline,nb_patientservices_slv_to_gld,/notebooks/nb_patientservices_slv_to_gld,,Patient Services,TABLE,GL,DEV,PatientServices_Silver,2,SCHEDULE,DAILY,Fabric,1,{},2026-08-05T05:17:01.813Z,Dev_CS,2026-08-25T10:04:27.489Z,Dev_CS
+48,SAMMS P1 Finance Gold Pipeline,Execute_P1_Finance,/pipelines/Execute_P1_Finance,Versioned Gold Publish,SAMMS,TABLE,GL,DEV,P1_FINANCE_SILVER,3,SCHEDULE,DAILY,Fabric,1,{},2026-08-05T21:04:59.978Z,DEV_HT,2026-08-26T16:49:10.839Z,DEV_HT
+42,ZOOM API Gold Pipeline,nb_zoom_slv_to_gld,/notebooks/nb_zoomapi_gold,/notebooks/nb_zoomapi_gold_transformations,Zoom,TABLE,GL,DEV,ZOOM_SILVER,3,SCHEDULE,DAILY,Fabric,1,{},2026-06-22T13:23:15.937Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+99,SAMMS P1 Forms Gold Pipeline,pl_execute_forms,/pipelines/pl_execute_forms,Optional Gold Publish,WAREHOUSE,TABLE,GL,DEV,P1_FORMS_SILVER,3,SCHEDULE,DAILY,Fabric,1,{},2026-07-20T14:52:13.041Z,DEV_HT,2026-08-26T17:25:13.785Z,DEV_HT
+27,SAMMS DartsSrv Gold Pipeline,pl_execute_dartsrv,/pipelines/Execute_DartSrv,Versioned Gold Publish,Warehouse,TABLE,GL,DEV,DARTS_SILVER,3,SCHEDULE,DAILY,Fabric,0,{},2026-06-04T16:10:02.666Z,DEV_HT,2026-08-25T10:04:27.489Z,DEV_JR
+32,SAMMS FormAnswerSignatures Silver Pipeline,pl_execute_pipeline_answersignature,/notebooks/nb_answersig_bronze_to_silver,/notebooks/nb_answersig_bronze_to_silver,Lakehouse,TABLE,SL,DEV,FORMANSWERSIGNATURES_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-05T19:47:59.896Z,DEV_HT,2026-08-24T14:40:18.252Z,DEV_HT
+127,OneDrive - Overdue Course Silver Pipeline,nb_overduecourses_brz_to_slv,/notebooks/nb_overduecourses_brz_to_slv,nb_overduecourses_slv_transformations,OneDrive - Overdue Course,TABLE,SL,DEV,OverdueCourses_Bronze,2,SCHEDULE,DAILY,Fabric,1,{},2026-08-20T17:41:05.477Z,Dev_CS,2026-08-20T17:41:05.477Z,Dev_CS
+131,AzureSQL4 Workflows Silver Pipeline,nb_azuresql_04_slv_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/AzureSQL4/nb_azuresql4_slv_to_slv,nb_azuresql_04_silver_transformations,AzureSQL4 Workflows,TABLE,SL,DEV,,1,SCHEDULED,DAILY,Fabric,1,{},2026-08-25T10:17:08.240Z,Dev_CS,2026-08-25T10:17:08.240Z,Dev_CS
+132,AzureSQL4 Workflows Gold Pipeline,nb_azuresql_04_slv_to_gld,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/AzureSQL4/nb_azuresql4_slv_to_gld,nb_azuresql_04_gold_transformations,AzureSQL4 Workflows,TABLE,GL,DEV,,2,SCHEDULED,DAILY,Fabric,1,{},2026-08-25T10:17:08.240Z,Dev_CS,2026-08-26T19:18:18.813Z,Dev_CS
+141,AzureSQL5 Workflows Silver Pipeline,nb_azuresql_05_slv_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/AzureSQL_05/nb_azuresql_05_slv_to_slv,nb_azuresql_05_silver_transformations,AzureSQL5 Workflows,TABLE,SL,DEV,,1,SCHEDULED,DAILY,Fabric,1,,2026-09-03T05:27:18.830Z,DEV_CS,2026-09-03T05:27:18.830Z,DEV_CS
+96,chatmeter Gold Pipeline,nb_chatmeter_slv_to_gld,/notebooks/nb_chatmeter_slv_to_gld,,Chatmeter,TABLE,GL,DEV,Bronze_to_Silver,3,SCHEDULE,DAILY,Fabric,1,,2026-07-08T03:07:06.661Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+39,KnowBe4 Gold Pipeline,nb_knowbe4_slv_to_gld,/notebooks/nb_knowbe4_slv_to_gld,,KNOWBE4,TABLE,GL,DEV,KNOWBE4_SILVER,3,SCHEDULE,DAILY,Fabric,0,{},2026-06-17T08:44:48.780Z,DEV_SP,2026-08-25T10:04:27.489Z,DEV_SP
+86,SAMMS INV Silver Pipeline,pl_inv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_inv,,Bronze Lakehouse,Table,SL,DEV,,2,SCHEDULE,DAILY,Fabric,1,,2026-06-22T06:58:21.500Z,DEV_YP,2026-06-22T06:58:21.500Z,DEV_YP
+87,SAMMS INV Gold Pipeline,pl_inv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_inv,,Silver Lakehouse,Table,GL,DEV,,1,SCHEDULE,DAILY,Fabric,0,,2026-06-22T06:58:26.938Z,DEV_YP,2026-08-25T10:04:27.489Z,DEV_JR
+125,P1/P2 Assessments Gold,pl_execute_Assessments_02,/pipelines/pl_execute_Assessments_02,Assessments,SL,TABLE,GL,DEV,124,3,MANUAL,,MANUAL,0,,2026-08-13T10:25:20.351Z,Dev_JR,2026-08-25T10:04:27.489Z,DEV_JR
+123,P1/P2 Assessments Bronze,pl_execute_Assessments_02,/pipelines/pl_execute_Assessments_02,Assessments,SAMMS,DataBase,BR,DEV,,1,MANUAL,,MANUAL,1,,2026-08-13T10:21:20.530Z,Dev_JR,2026-08-19T05:31:52.082Z,Dev_JR
+133,Azure SQL Alteryx-2 Silver,nb_azuresql_02_slv_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Azuresql-02/nb_azuresql_02_slv_to_slv,/notebooks/nb_azuresql_02_silver_transformations,Azure SQL,TABLE,SL,DEV,,1,SCHEDULED,DAILY,Fabric,1,{},2026-08-26T15:02:18.698Z,Dev_AK,2026-08-26T15:02:18.698Z,Dev_AK
+134,Azure SQL Alteryx-2 Gold,nb_azuresql_02_slv_to_gld,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Azuresql-02/nb_azuresql_02_slv_to_gld,/notebooks/nb_azuresql_02_gold_transformations,Azure SQL,TABLE,GL,DEV,,2,SCHEDULED,DAILY,Fabric,1,{},2026-08-26T15:02:18.698Z,Dev_AK,2026-08-26T15:02:18.698Z,Dev_AK
+29,SAMMS FormQuestionAnswers Silver Pipeline,pl_execute_form_questionanswers,/notebooks/nb_forms_bronze_to_silver,/notebooks/nb_forms_bronze_to_silver,Lakehouse,TABLE,SL,DEV,FORMQUESTIONANSWERS_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-05T17:02:42.889Z,DEV_HT,2026-08-24T14:39:31.510Z,DEV_HT
+12,Verity Gold Pipeline,nb_veritystream_slv_to_gld,/notebooks/nb_veritystream_slv_to_gld,,VerityStream,TABLE,GL,DEV,Bronze_to_Silver,3,SCHEDULE,DAILY,Fabric,1,{},2026-06-08T06:33:59.220Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+81,Absolute Gold Inventory Pipeline,nb_absolute_slv_to_gld,/notebooks/nb_absolute_execute,,Absolute,TABLE,GL,DEV,Bronze_to_Silver,3,SCHEDULED,DAILY,Fabric,1,{},2026-07-13T06:24:02.786Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+75,Alloy Gold Incidents Pipeline,nb_alloy_slv_to_gld,/notebooks/nb_alloyapi_gold_transformations,,ALLOY,TABLE,GL,DEV,ALLOY_SILVER,3,SCHEDULED,DAILY,Fabric,1,{},2026-06-18T13:44:26.673Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+111,Cash Flow Gold Pipeline,nb_cashflow_slv_to_gld,/notebooks/nb_cashflow_slv_to_gld,,Cash Flow,TABLE,GL,DEV,CashFlow_Silver,3,SCHEDULE,DAILY,Fabric,0,{},2026-07-28T17:23:03.669Z,Dev_CS,2026-08-25T10:04:27.489Z,DEV_JR
+108,P1/P2 Clinical Domain Gold,pl_execute_Clinical,/pipelines/pl_execute_Clinical,CLINICAL,SILVER LAKEHOUSE,TABLE,GL,DEV,107,3,MANUAL,,MANUAL,0,,2026-07-28T03:14:17.189Z,Dev_JR,2026-08-25T10:04:27.489Z,DEV_JR
+124,P1/P2 Assessments Silver,pl_execute_Assessments_02,/pipelines/pl_execute_Assessments_02,Assessments,BR,TABLE,SL,DEV,123,2,MANUAL,,MANUAL,1,,2026-08-13T10:23:00.013Z,Dev_JR,2026-08-19T05:31:52.082Z,Dev_JR
+89,SAMMS P1 Reference Silver Pipeline,nb_p1_reference_bronze_to_silver,/notebooks/nb_p1_reference_bronze_to_silver,/notebooks/nb_p1_reference_bronze_to_silver,SAMMS,TABLE,SL,DEV,P1_REFERENCE_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-25T17:01:27.323Z,DEV_HT,2026-08-24T14:40:36.088Z,DEV_HT
+130,Azure Sql Python Gold,pl_Azure_Sql_Python,/pipelines/pl_Azure_Sql_Python,Azure_Sql_Server,SILVER LAKEHOUSE,TABLE,GL,DEV,129,2,MANUAL,,MANUAL,1,,2026-08-22T12:12:21.884Z,DEV_JR,2026-08-25T10:04:27.489Z,DEV_JR
+9,SAMMS Dose Gold Pipeline,pl_dose,/notebooks/nb_p1_reference_optional_gold_publish,,Silver,TABLE,GL,DEV,Brz_to_Slv,3,SCHEDULE,DAILY,Fabric,0,,2026-06-03T14:30:25.779Z,DEV_HT,2026-08-25T10:04:27.489Z,DEV_JR
+78,SAMMS PatientPreAdmission Gold Pipeline,pl_ppa,,,Fabric,Lakehouse,GL,DEV,SAMMS PatientPreAdmission Silver Pipeline,3,SCHEDULE,DAILY,Fabric,1,,2026-06-18T18:58:52.878Z,DEV_HT,2026-08-26T20:53:05.588Z,DEV_HT
+6,8x8 Gold Pipeline,nb_8x8_slv_to_gld,/notebooks/nb_8x8_slv_to_gld,,8X8,TABLE,GL,DEV,8x8_SILVER,3,SCHEDULE,DAILY,Fabric,0,{},2026-06-08T06:50:00.572Z,DEV_SP,2026-09-03T08:56:42.881Z,DEV_SP
+93,Gold Conferdeploy,nb_conferdeploy_slv_to_gld,/notebooks/nb_conferdeploy,,Conferdeploy,TABLE,GL,DEV,,3,SCHEDULED,DAILY,Fabric,1,,2026-07-01T18:09:34.948Z,Dev_AK,2026-08-25T10:04:27.489Z,DEV_AK
+136,CallBackList Silver Pipeline,nb_callback_brz_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Callback_Lists/nb_callback_brz_to_slv,nb_callback_list_transformations,Salesforce,TABLE,SL,DEV,,2,SCHEDULE,DAILY,Fabric,1,{},2026-08-26T18:26:49.122Z,DEV_YP,2026-08-26T18:26:49.122Z,DEV_YP
+47,SAMMS P1 Finance Silver Pipeline,nb_p1_finance_bronze_to_silver,/notebooks/nb_p1_finance_bronze_to_silver,/notebooks/nb_p1_finance_bronze_to_silver,SAMMS,TABLE,SL,DEV,P1_FINANCE_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-08-05T21:04:59.978Z,DEV_HT,2026-08-24T14:42:03.638Z,DEV_HT
+116,Patient Services Silver Pipeline,nb_patientservices_slv_to_slv,/notebooks/nb_patientservices_slv_to_slv,nb_patientservices_slv_transformations,Patient Services,TABLE,SL,DEV,NULL,1,SCHEDULE,DAILY,Fabric,1,{},2026-08-05T05:16:49.989Z,Dev_CS,2026-08-05T05:44:33.339Z,Dev_CS
+104,Active Directory Silver Pipeline,nb_activedirectory_brz_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/ActiveDirectory/nb_activedirectory_brz_to_slv,,Active Directory,TABLE,SL,DEV,,2,SCHEDULE,DAILY,Fabric,1,"{}",2026-07-27T09:10:16.202Z,Dev_AK,2026-07-27T09:10:16.202Z,Dev_AK
+121,OffWeek Counseling Silver Pipeline,nb_offweekcounseling_slv_to_slv,/notebooks/nb_offweekcounseling_slv_to_slv,nb_offweekcounseling_slv_transformations,OffWeek Counseling,TABLE,SL,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-08-08T10:23:50.584Z,Dev_CS,2026-08-08T10:23:50.584Z,Dev_CS
+101,QQ_GLTRAN Silver Pipeline,nb_qq_gltran_brz_to_slv,/notebooks/nb_qq_qltran_brz_to_slv,/notebooks/nb_qq_gltran_slv_transformations,LAKEHOUSE,TABLE,SL,DEV,QQ_GLTRAN Bronze Pipeline,2,SCHEDULE,DAILY,Fabric,1,,2026-08-27T08:57:23.288Z,DEV_SP,2026-08-27T08:57:23.288Z,DEV_SP
+83,Salesforce Silver Pipeline,nb_salesforce_brz_to_slv,/notebooks/nb_salesforce_brz_to_slv,/notebooks/nb_salesforce_slv_transformations,SALESFORCE,TABLE,SL,DEV,SALESFORCE_BRONZE,2,SCHEDULE,DAILY,Fabric,1,,2026-07-06T19:52:57.773Z,DEV_SP,2026-07-06T19:52:57.773Z,DEV_SP
+26,SAMMS DartsSrv Silver Pipeline,pl_execute_dartsrv,/notebooks/nb_darts_bronze_to_silver,/notebooks/nb_darts_bronze_to_silver,Lakehouse,TABLE,SL,DEV,DARTS_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-04T16:10:02.666Z,DEV_HT,2026-08-24T14:40:52.661Z,DEV_HT
+137,CallBackList Gold Pipeline,nb_callback_gold,/notebooks/nb_callback_gold_f,nb_callback_list_gold_transformations,Salesforce,TABLE,GL,DEV,CALLBACKLIST_SILVER,3,SCHEDULE,DAILY,Fabric,1,{},2026-08-26T18:26:49.122Z,DEV_YP,2026-08-26T18:26:49.122Z,DEV_YP
+38,KnowBe4 Silver Pipeline,nb_knowbe4_brz_to_slv,/notebooks/nb_knowbe4_brz_to_slv,/notebooks/nb_knowbe4_slv_transformations,KNOWBE4,TABLE,SL,DEV,KNOWBE4_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-16T10:54:34.589Z,DEV_SP,2026-06-16T10:54:34.589Z,DEV_SP
+110,Cash Flow Silver Pipeline,nb_cashflow_brz_to_slv,/notebooks/nb_cashflow_brz_to_slv,nb_cashflow_slv_transformations,Cash Flow,TABLE,SL,DEV,CashFlow_Bronze,2,SCHEDULE,DAILY,Fabric,1,{},2026-07-28T17:23:03.669Z,Dev_CS,2026-07-28T17:23:03.669Z,Dev_CS
+142,Azure SQL Alteryx-03 Silver,nb_azuresql_03_slv_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Azuresql_03/nb_azuresql_03_slv_to_slv,,Silver Lakehouse,TABLE,SL,DEV,,1,SCHEDULED,DAILY,Fabric,1,{},2026-09-03T06:23:52.158Z,Dev_AK,2026-09-03T06:23:52.158Z,Dev_AK
+143,Azure SQL Alteryx-03 Gold,nb_azuresql_03_slv_to_gld,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Azuresql_03/nb_azuresql_03_slv_to_gld,,Silver Lakehouse,TABLE,GL,DEV,,2,SCHEDULED,DAILY,Fabric,1,{},2026-09-03T06:23:52.158Z,Dev_AK,2026-09-03T06:23:52.158Z,DEV_AK
+98,SAMMS P1 Forms Silver Pipeline,pl_execute_forms,/pipelines/pl_execute_forms,/notebooks/nb_p1_forms_bronze_to_silver,SAMMS,TABLE,SL,DEV,P1_FORMS_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-07-16T14:55:38.036Z,DEV_HT,2026-08-24T14:41:13.325Z,DEV_HT
+41,ZOOM API silver Pipeline,nb_zoom_brz_to_slv,/notebooks/nb_zoomapi_silver,/notebooks/nb_zoomapi_silver_transformations,Zoom,TABLE,SL,DEV,ZOOM_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-22T13:23:02.009Z,Dev_AK,2026-06-22T13:23:02.009Z,Dev_AK
+112,Azure SQL Alteryx-01 Silver,nb_azuresql_01_slv_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/Azuresql/nb_azuresql_slv,,Azure SQL,TABLE,SL,DEV,,1,SCHEDULED,WEEKLY,Fabric,1,{},2026-07-31T04:20:07.800Z,Dev_AK,2026-07-31T04:20:07.800Z,Dev_AK
+118,SAMMS P1/P2 Assessments Bronze,pl_p1p2_assessments,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_p1p2_assessments,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,,2026-08-08T10:35:00.452Z,DEV_YP,2026-08-08T10:35:00.452Z,DEV_YP
+2,UKG Silver Pipeline,nb_ukg_brz_to_slv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/2_Transformation/UKG/nb_ukg_brz_to_slv,,UKG,TABLE,SL,DEV,,2,SCHEDULE,DAILY,Fabric,1,{},2026-05-31T16:22:34.344Z,DEV_YP,2026-05-31T16:22:34.344Z,DEV_YP
+126,OneDrive - Overdue Course Bronze Pipeline,nb_overduecourses_src_to_brz,/notebooks/nb_overduecourses_src_to_brz,,OneDrive - Overdue Course,FILE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-08-20T17:41:05.477Z,Dev_CS,2026-08-20T17:41:05.477Z,Dev_CS
+5,8x8 Silver Pipeline,nb_8x8_brz_to_slv,/notebooks/nb_8x8_brz_to_slv,/notebooks/nb_8x8_slv_transformations,8X8,TABLE,SL,DEV,8X8_BRONZE,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-07T16:57:11.445Z,DEV_SP,2026-06-07T16:57:11.445Z,DEV_SP
+31,SAMMS FormAnswerSignatures Bronze Pipeline,pl_execute_pipeline_answersignature,/pipelines/pl_answersig_samms_to_lakehouse,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-06-05T19:47:59.896Z,DEV_HT,2026-08-24T14:40:18.252Z,DEV_HT
+74,Alloy Silver Incidents Pipeline,nb_alloy_brz_to_slv,/notebooks/nb_alloyapi_silver_transformations,,ALLOY,TABLE,SL,DEV,ALLOY_BRONZE,2,SCHEDULED,DAILY,Fabric,1,{},2026-06-18T11:26:03.784Z,Dev_AK,2026-06-18T11:26:03.784Z,Dev_AK
+139,CDC Orders Silver,pl_Orders,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_Orders,Orders,Bronze Lakehouse,Table,SL,DEV,138,2,SCHEDULE,DAILY,Fabric,1,,2026-08-28T12:47:33.153Z,DEV_JR,2026-08-28T12:47:33.153Z,DEV_JR
+80,Absolute Silver Inventory Pipeline,nb_absolute_brz_to_slv,/notebooks/nb_absolute_execute,,Absolute,TABLE,SL,DEV,Src_to_Bronze,2,SCHEDULED,DAILY,Fabric,1,{},2026-07-13T06:24:02.786Z,Dev_AK,2026-07-13T06:24:02.786Z,Dev_AK
+140,CDC Orders Gold,pl_Orders,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_Orders,Orders,Silver Lakehouse,Table,GL,DEV,139,3,SCHEDULE,DAILY,Fabric,0,,2026-08-28T12:47:33.153Z,DEV_JR,2026-08-29T09:59:52.674Z,DEV_JR
+28,SAMMS FormQuestionAnswers Bronze Pipeline,pl_execute_form_questionanswers,/pipelines/pl_forms_samms_to_lakehouse,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-06-05T17:02:42.889Z,DEV_HT,2026-08-24T14:39:31.510Z,DEV_HT
+145,Clinical UA CDC Silver,pl_clinical_ua_cdc_brz_to_slv,/pipelines/pl_clinical_ua_cdc_brz_to_slv,CLINICAL,Bronze Lakehouse,TABLE,SL,DEV,144,2,MANUAL,,MANUAL,1,,2026-09-04T10:26:41.345Z,DEV_JR,2026-09-04T10:26:41.345Z,DEV_JR
+11,Verity Silver Pipeline,nb_veritystream_brz_to_slv,/notebooks/nb_veritystream_brz_to_slv,,VerityStream,TABLE,SL,DEV,Src_to_Bronze,2,SCHEDULE,DAILY,Fabric,1,,2026-06-05T01:34:27.954Z,Dev_AK,2026-06-05T01:34:27.954Z,Dev_AK
+146,Clinical UA CDC Gold,pl_clinical_ua_cdc_brz_to_slv,/pipelines/pl_clinical_ua_cdc_brz_to_slv,CLINICAL,Silver Lakehouse,TABLE,GL,DEV,145,3,MANUAL,,MANUAL,1,,2026-09-04T10:26:41.345Z,DEV_JR,2026-09-04T10:26:41.345Z,DEV_JR
+95,chatmeter Silver Pipeline,nb_chatmeter_brz_to_slv,/notebooks/nb_chatmeter_brz_to_slv,,Chatmeter,TABLE,SL,DEV,Src_to_Bronze,2,SCHEDULE,DAILY,Fabric,1,,2026-07-08T03:07:03.593Z,Dev_AK,2026-07-08T03:07:03.593Z,Dev_AK
+138,CDC Orders Bronze,pl_Orders,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_Orders,Orders,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,,2026-08-28T12:47:33.153Z,DEV_JR,2026-08-28T12:47:33.153Z,DEV_JR
+18,SAMMS Orders Bronze,pl_SaveOrders,/pipelines/pl_SaveOrders,Orders,SAMMS,DATABASE,BR,DEV,,1,MANUAL,,MANUAL,1,,2026-06-08T22:13:42.505Z,Dev_JR,2026-09-01T08:50:24.098Z,DEV_JR
+107,P1/P2 Clinical Domain Silver,pl_execute_Clinical,/pipelines/pl_execute_Clinical,CLINICAL,BRONZE LAKEHOUSE,TABLE,SL,DEV,106,2,MANUAL,,MANUAL,1,,2026-07-28T03:13:13.590Z,Dev_JR,2026-08-19T05:31:52.082Z,Dev_JR
+8,SAMMS Dose Silver Pipeline,pl_dose,/notebooks/nb_execute_dose_bronze_to_silver,,Bronze,TABLE,SL,DEV,Src_to_Brz,2,SCHEDULE,DAILY,Fabric,1,{},2026-06-03T14:29:01.219Z,DEV_HT,2026-08-24T19:30:18.390Z,DEV_HT
+144,Clinical UA CDC Bronze,pl_clinical_ua_cdc_src_to_bronze,/pipelines/pl_clinical_ua_cdc_src_to_bronze,CLINICAL,SAMMS,DATABASE,BR,DEV,,1,MANUAL,,MANUAL,1,,2026-09-04T10:26:41.345Z,DEV_JR,2026-09-04T10:26:41.345Z,DEV_JR
+115,CDC Silver Pipeline,pl_inv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_inv,,Bronze Lakehouse,Table,SL,DEV,,2,SCHEDULE,DAILY,Fabric,1,,2026-08-02T21:30:11.972Z,Yashwanth,2026-08-02T21:30:11.972Z,Yashwanth
+92,Silver Conferdeploy,nb_conferdeploy_brz_to_slv,/notebooks/nb_conferdeploy_silver_transformations,,Conferdeploy,TABLE,SL,DEV,,2,SCHEDULED,DAILY,Fabric,1,,2026-07-01T07:32:39.746Z,Dev_AK,2026-07-01T07:32:39.746Z,Dev_AK
+88,SAMMS P1 Reference Bronze Pipeline,pl_execute_reference,/pipelines/pl_execute_reference,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-06-25T17:01:27.323Z,DEV_HT,2026-08-24T14:40:36.088Z,DEV_HT
+109,Cash Flow Bronze Pipeline,nb_cashflow_src_to_brz,/notebooks/nb_cashflow_src_to_brz,,Cash Flow,FILE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-07-28T17:23:03.669Z,Dev_CS,2026-07-28T17:23:03.669Z,Dev_CS
+114,CDC Bronze Pipeline,pl_inv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_inv,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,,2026-08-02T21:30:11.972Z,Yashwanth,2026-08-02T21:30:11.972Z,Yashwanth
+85,SAMMS INV Bronze Pipeline,pl_inv,BHG-DATA-PLATFORM-CORE-DEV/2_Engineering/3_Orchestration/pl_inv,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,,2026-06-22T06:57:27.101Z,DEV_YP,2026-06-22T06:57:27.101Z,DEV_YP
+77,SAMMS PatientPreAdmission Silver Pipeline,pl_ppa,,,Fabric,Lakehouse,SL,DEV,SAMMS PatientPreAdmission Bronze Pipeline,2,SCHEDULE,DAILY,Fabric,1,,2026-06-18T18:56:26.761Z,DEV_HT,2026-08-24T14:41:29.149Z,DEV_HT
+7,SAMMS Dose Bronze Pipeline,pl_dose,/pipelines/pl_dose,,SAMMS,DATABASE,BR,DEV,NB_ActiveSiteCodes,1,SCHEDULE,DAILY,Fabric,1,{},2026-06-03T14:21:48.088Z,DEV_HT,2026-08-24T19:30:18.390Z,DEV_HT
+25,SAMMS DartsSrv Bronze Pipeline,pl_execute_dartsrv,/pipelines/dartSRV_Pipeline,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-06-04T16:10:02.666Z,DEV_HT,2026-08-24T14:40:52.661Z,DEV_HT
+129,Azure Sql Python Silver,pl_Azure_Sql_Python,/pipelines/pl_Azure_Sql_Python,Azure_Sql_Server,Azure_Sql,TABLE,SL,DEV,,1,MANUAL,,MANUAL,1,,2026-08-22T12:12:21.884Z,DEV_JR,2026-08-22T12:12:21.884Z,DEV_JR
+97,SAMMS P1 Forms Bronze Pipeline,pl_execute_forms,/pipelines/pl_execute_forms,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-07-16T14:55:38.036Z,DEV_HT,2026-08-24T14:41:13.325Z,DEV_HT
+148,SAMMS Batch Payments Silver,pl_batchpayments,/pipelines/pl_batchpayments,BatchPayments,BR,TABLE,SL,DEV,147,2,MANUAL,,MANUAL,1,,2026-09-07T13:17:39.186Z,Dev_CS,2026-09-07T13:17:39.186Z,Dev_CS
+20,SAMMS Orders Gold,pl_SaveOrders,/pipelines/pl_SaveOrders,Orders,SL,TABLE,GL,DEV,19,3,MANUAL,,MANUAL,0,,2026-06-08T22:14:43.944Z,Dev_JR,2026-08-25T10:06:47.577Z,DEV_JR
+19,SAMMS Orders Silver,pl_SaveOrders,/pipelines/pl_SaveOrders,Orders,BR,TABLE,SL,DEV,18,2,MANUAL,,MANUAL,1,,2026-06-08T22:14:08.636Z,Dev_JR,2026-08-25T09:54:59.503Z,DEV_JR
+45,SAMMS Global Gold,pl_execute_samms_global,,GLOBAL,LAKEHOUSE,TABLE,GL,DEV,44,3,MANUAL,,MANUAL,0,,2026-06-18T14:32:27.666Z,Dev_JR,2026-08-25T10:04:27.489Z,DEV_JR
+149,SAMMS Batch Payments Gold,pl_batchpayments,/pipelines/pl_batchpayments,BatchPayments,SL,TABLE,GL,DEV,148,3,MANUAL,,MANUAL,1,,2026-09-07T13:17:39.186Z,Dev_CS,2026-09-07T13:17:39.186Z,Dev_CS
+106,P1/P2 Clinical Domain Bronze,pl_execute_Clinical,/pipelines/pl_execute_Clinical,CLINICAL,SAMMS,DATABASE,BR,DEV,,1,MANUAL,,MANUAL,1,,2026-07-28T03:10:49.121Z,Dev_JR,2026-08-19T05:31:52.082Z,Dev_JR
+46,SAMMS P1 Finance Bronze Pipeline,pl_p1_finance,/pipelines/pl_p1_finance,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,{},2026-08-05T21:04:59.978Z,DEV_HT,2026-08-24T14:42:03.638Z,DEV_HT
+147,SAMMS Batch Payments Bronze,pl_batchpayments,/pipelines/pl_batchpayments,BatchPayments,SAMMS,DATABASE,BR,DEV,,1,MANUAL,,MANUAL,1,,2026-09-07T13:17:39.186Z,Dev_CS,2026-09-07T13:17:39.186Z,Dev_CS
+102,QQ_GLTRAN Gold Pipeline,nb_qq_gltran_slv_to_gld,,,LAKEHOUSE,TABLE,GL,DEV,QQ_GLTRAN Silver Pipeline,3,SCHEDULE,DAILY,Fabric,0,,2026-08-27T08:58:57.372Z,DEV_SP,2026-08-27T08:58:57.372Z,DEV_SP
+35,SAMMS Notes Silver Pipeline,pl_execute_notes,/pipelines/pl_execute_notes,Notes,Lakehouse,TABLE,SL,DEV,,2,Manual,,Manual,1,,2026-06-12T16:24:21.644Z,DEV_HT,2026-08-31T14:47:09.555Z,DEV_HT
+34,SAMMS Notes Bronze Pipeline,pl_execute_notes,/pipelines/pl_execute_notes,Notes,SAMMS,DATABASE,BR,DEV,,1,Manual,,Manual,1,,2026-06-12T16:24:21.644Z,DEV_HT,2026-08-31T14:47:09.555Z,DEV_HT
+36,SAMMS Notes Gold Pipeline,pl_execute_notes,/pipelines/pl_execute_notes,Notes,Warehouse,TABLE,GL,DEV,,3,Manual,,Manual,0,,2026-06-12T16:24:21.644Z,DEV_HT,2026-08-31T14:47:09.555Z,DEV_HT
+44,SAMMS Global Silver,pl_execute_samms_global,,GLOBAL,LAKEHOUSE,TABLE,SL,DEV,43,2,MANUAL,,MANUAL,1,,2026-06-18T14:30:29.348Z,Dev_JR,2026-06-18T14:30:29.348Z,Dev_JR
+76,SAMMS PatientPreAdmission Bronze Pipeline,pl_ppa,,,SAMMS,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,,2026-06-18T19:04:16.005Z,DEV_HT,2026-08-24T14:41:29.149Z,DEV_HT
+100,QQ_GLTRAN Bronze Pipeline,pl_qq_gltran,,,MYSQLSERVER,DATABASE,BR,DEV,,1,SCHEDULE,DAILY,Fabric,1,,2026-08-27T08:57:09.011Z,DEV_SP,2026-08-27T08:57:09.011Z,DEV_SP
+43,SAMMS Global Bronze,pl_execute_samms_global,,GLOBAL,SAMMS,DATA BASE,BR,DEV,,1,MANUAL,,MANUAL,1,,2026-06-18T14:24:17.635Z,Dev_JR,2026-06-18T14:24:17.635Z,Dev_JR
