@@ -2,7 +2,9 @@ import clsx from "clsx";
 
 const styles: Record<string, string> = {
   SUCCESS: "bg-emerald-500/20 text-emerald-300 ring-emerald-500/40",
+  PASSED: "bg-emerald-500/20 text-emerald-300 ring-emerald-500/40",
   FAILED: "bg-red-500/20 text-red-300 ring-red-500/40",
+  ZERO_ROWS: "bg-amber-500/20 text-amber-300 ring-amber-500/40",
   RUNNING: "bg-blue-500/20 text-blue-300 ring-blue-500/40",
   SKIPPED: "bg-slate-500/20 text-slate-300 ring-slate-500/40",
 };

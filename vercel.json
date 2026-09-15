@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm ci --prefix tools/etl-ops-web",
+  "buildCommand": "npm run build --prefix tools/etl-ops-web",
+  "outputDirectory": "tools/etl-ops-web/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

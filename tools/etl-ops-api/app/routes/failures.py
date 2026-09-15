@@ -65,24 +65,27 @@ def failed_tasks(
     target_name: Literal["BR", "SL", "GL"] | None = None,
     site_code: str | None = None,
     method: str | None = None,
+    no_site_only: bool = False,
     limit: int = 100,
     offset: int = 0,
 ):
+    filters = parse_filters(
+        ref_date=ref_date,
+        lookback_days=lookback_days,
+        start_date_from=start_date_from,
+        start_date_to=start_date_to,
+        config_name=config_name,
+        target_name=target_name,
+        site_code=site_code,
+        method=method,
+        limit=limit,
+        offset=offset,
+    )
     return {
-        "failures": queries.failed_tasks(
-            parse_filters(
-                ref_date=ref_date,
-                lookback_days=lookback_days,
-                start_date_from=start_date_from,
-                start_date_to=start_date_to,
-                config_name=config_name,
-                target_name=target_name,
-                site_code=site_code,
-                method=method,
-                limit=limit,
-                offset=offset,
-            )
-        )
+        "failures": queries.failed_tasks(filters, no_site_only=no_site_only),
+        "total": queries.count_failed_tasks(filters, no_site_only=no_site_only),
+        "limit": limit,
+        "offset": offset,
     }
 
 

@@ -1,13 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { api } from "../api/client";
 import { DataTable } from "../components/DataTable";
-import { FabricLink, fabricLinkColumn, rowToRunMeta } from "../components/FabricLink";
-import { LayerBadge, StatusBadge } from "../components/StatusBadge";
+import { PipelinesDashboard } from "../components/PipelinesDashboard";
+import {
+  PipelineConfigDrawer,
+  PipelineRunLayersDrawer,
+  type PipelineCatalogRow,
+} from "../components/PipelineDrawers";
+import { LayerBadge } from "../components/StatusBadge";
+import { TablePagination } from "../components/TablePagination";
 import { buildTrendsHref } from "../components/TrendsScopeBar";
 import { formatDateRange } from "../hooks/useGlobalFilters";
 import type { FilterContext } from "../hooks/useFilterContext";
+
+const PAGE_SIZE = 50;
 
 function formatShortTime(value?: string): string {
   if (!value) return "—";
@@ -37,10 +45,12 @@ function ActiveBadge({ value }: { value: string }) {
 }
 
 export function PipelinesPage() {
-  const { filters, setFilters } = useOutletContext<FilterContext>();
+  const { filters } = useOutletContext<FilterContext>();
+  const [selectedConfig, setSelectedConfig] = useState<PipelineCatalogRow | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [hideIdle, setHideIdle] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   const dateLabel = formatDateRange(filters.startDateFrom, filters.startDateTo);
 
@@ -49,15 +59,9 @@ export function PipelinesPage() {
     queryFn: () => api.pipelinesOverview(filters),
   });
 
-  const { data: runs } = useQuery({
-    queryKey: ["pipelineRuns", filters],
-    queryFn: () => api.pipelineRuns({ ...filters, limit: 50 }),
-  });
-
-  const { data: layers } = useQuery({
-    queryKey: ["pipelineLayers", selectedRunId],
-    queryFn: () => api.pipelineLayers(selectedRunId!),
-    enabled: !!selectedRunId,
+  const { data: chartRuns } = useQuery({
+    queryKey: ["pipelineRuns", "dashboard", filters],
+    queryFn: () => api.pipelineRuns({ ...filters, limit: 500 }),
   });
 
   const catalogRows = useMemo(() => {
@@ -76,18 +80,59 @@ export function PipelinesPage() {
     return rows;
   }, [overview?.pipelines, hideIdle, search]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [filters.configName, filters.targetName, filters.sourceSystem, filters.startDateFrom, filters.startDateTo, hideIdle, search]);
+
+  const catalogTotal = catalogRows.length;
+  const catalogPageRows = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return catalogRows.slice(start, start + PAGE_SIZE);
+  }, [catalogRows, page]);
+
   const withRuns = (overview?.pipelines ?? []).filter((r) => Number(r.runs_in_window || 0) > 0).length;
   const totalConfigs = overview?.pipelines?.length ?? 0;
 
+  const openConfig = (row: Record<string, string>) => {
+    setSelectedRunId(null);
+    setSelectedConfig({
+      ConfigName: row.ConfigName,
+      TargetName: row.TargetName,
+      SourceSystem: row.SourceSystem,
+      IsActive: row.IsActive,
+      runs_in_window: row.runs_in_window,
+      failed_runs: row.failed_runs,
+      last_run: row.last_run,
+    });
+  };
+
+  const openRunLayers = (pipelineRunId: string) => {
+    setSelectedRunId(pipelineRunId);
+  };
+
   return (
-    <div className="space-y-8">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-3 text-sm text-slate-300">
-        <p className="font-medium text-slate-100">ETL module catalog</p>
-        <p className="mt-1 text-xs text-slate-400">
-          Registered pipelines from <span className="text-slate-300">etlconfig</span> — including modules with no runs in the
-          selected window ({dateLabel || "set dates above"}). Use Home for live ops; Trends for analysis.
+    <div className="space-y-3">
+      <div className="rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-2.5">
+        <h2 className="text-sm font-semibold text-slate-100">Pipelines Dashboard</h2>
+        <p className="mt-0.5 text-xs text-slate-400">
+          ETL module catalog from <span className="text-slate-300">etlconfig</span>
+          {dateLabel ? ` · ${dateLabel}` : ""} — click a KPI or chart to expand, or a catalog row for pipeline details. Use{" "}
+          <Link to="/runs" className="text-sky-400 hover:underline">
+            Run Explorer
+          </Link>{" "}
+          to browse executions.
         </p>
       </div>
+
+      <PipelinesDashboard
+        catalog={overview?.pipelines ?? []}
+        runs={chartRuns?.runs ?? []}
+        isLoading={isLoading}
+        onSelectConfig={(row) => {
+          setSelectedRunId(null);
+          setSelectedConfig(row);
+        }}
+      />
 
       <section>
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
@@ -113,27 +158,36 @@ export function PipelinesPage() {
               />
               Hide idle (0 runs)
             </label>
+            <TablePagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={catalogTotal}
+              onPageChange={setPage}
+              compact
+              className="justify-end"
+            />
           </div>
         </div>
         <DataTable
-          rows={catalogRows as unknown as Record<string, string>[]}
+          rows={catalogPageRows as unknown as Record<string, string>[]}
           emptyMessage={
             hideIdle
               ? "No modules with runs in this window — try another date or uncheck Hide idle"
               : "No registered pipeline configs match your filters"
           }
+          onRowClick={openConfig}
           columns={[
             {
               key: "ConfigName",
               label: "Config",
-              render: (v) => (
+              render: (v, row) => (
                 <button
                   type="button"
                   className="max-w-[240px] truncate text-left text-sky-300 hover:underline"
                   title={v}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setFilters({ configName: v });
+                    openConfig(row);
                   }}
                 >
                   {v || "—"}
@@ -167,74 +221,26 @@ export function PipelinesPage() {
             },
           ]}
         />
-      </section>
-
-      <section>
-        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">Recent executions</h2>
-        <p className="mb-3 text-xs text-slate-500">Latest 50 layer runs in the date window — click a row for BR/SL/GL breakdown.</p>
-        <DataTable
-          rows={(runs?.runs ?? []) as unknown as Record<string, string>[]}
-          emptyMessage="No runs in the selected window"
-          onRowClick={(row) => setSelectedRunId(row.PipelineRunId)}
-          columns={[
-            { key: "ConfigName", label: "Pipeline" },
-            { key: "TargetName", label: "Layer", render: (v) => <LayerBadge layer={v} /> },
-            { key: "Status", label: "Status", render: (v) => <StatusBadge status={v} /> },
-            { key: "StartTime", label: "Start", render: (v) => formatShortTime(v) },
-            {
-              key: "PipelineRunId",
-              label: "Parent run",
-              render: (v) => (
-                <span className="font-mono text-[11px] text-slate-400" title={v}>
-                  {v ? `${v.slice(0, 8)}…` : "—"}
-                </span>
-              ),
-            },
-            fabricLinkColumn(),
-          ]}
+        <TablePagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={catalogTotal}
+          onPageChange={setPage}
+          className="mt-3 justify-between"
         />
       </section>
 
-      {selectedRunId && (
-        <section className="rounded-xl border border-slate-700 bg-slate-900/80 p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-slate-200">Layer breakdown</h2>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                to={buildTrendsHref({ pipelineRunId: selectedRunId })}
-                className="text-xs text-sky-400 hover:underline"
-              >
-                View trends
-              </Link>
-              <FabricLink
-                url={layers?.layers?.[0]?.fabricUrl}
-                meta={layers?.layers?.[0] ? rowToRunMeta(layers.layers[0]) : undefined}
-                label="Open in Fabric"
-                className="text-sm"
-              />
-              <button type="button" onClick={() => setSelectedRunId(null)} className="text-xs text-slate-400 hover:text-white">
-                Close
-              </button>
-            </div>
-          </div>
-          <p className="mb-3 font-mono text-[11px] text-slate-500">{selectedRunId}</p>
-          <DataTable
-            rows={layers?.layers ?? []}
-            emptyMessage="No layers for this parent run"
-            columns={[
-              { key: "ConfigName", label: "Pipeline" },
-              { key: "TargetName", label: "Layer", render: (v) => <LayerBadge layer={v} /> },
-              { key: "Status", label: "Status", render: (v) => <StatusBadge status={v} /> },
-              { key: "StartTime", label: "Start", render: (v) => formatShortTime(v) },
-              { key: "EndTime", label: "End", render: (v) => formatShortTime(v) },
-              { key: "SuccessTasks", label: "Success" },
-              { key: "FailedTasks", label: "Failed" },
-              { key: "duration_seconds", label: "Duration (s)" },
-              fabricLinkColumn(),
-            ]}
-          />
-        </section>
-      )}
+      <PipelineConfigDrawer
+        config={selectedConfig}
+        filters={filters}
+        onClose={() => setSelectedConfig(null)}
+        onSelectRun={(pipelineRunId) => {
+          setSelectedConfig(null);
+          setSelectedRunId(pipelineRunId);
+        }}
+      />
+
+      <PipelineRunLayersDrawer pipelineRunId={selectedRunId} onClose={() => setSelectedRunId(null)} />
     </div>
   );
 }

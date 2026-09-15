@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import clsx from "clsx";
 import { LayerBadge, StatusBadge } from "./StatusBadge";
+import { buildTrendsHref } from "./TrendsScopeBar";
 import type { PipelineRun } from "../types";
 
 interface GroupedRunsViewProps {
@@ -8,6 +10,7 @@ interface GroupedRunsViewProps {
   onExpandRun?: (run: PipelineRun) => void;
   onExpandGroupDetails?: (pipelineRunId: string, runs: PipelineRun[]) => void;
   emptyMessage?: string;
+  showTrendsLinks?: boolean;
 }
 
 interface GroupedRun {
@@ -72,7 +75,13 @@ function getLayerOrder(targetName: string | undefined): number {
   }
 }
 
-export function GroupedRunsView({ runs, onExpandRun, onExpandGroupDetails, emptyMessage }: GroupedRunsViewProps) {
+export function GroupedRunsView({
+  runs,
+  onExpandRun,
+  onExpandGroupDetails,
+  emptyMessage,
+  showTrendsLinks = false,
+}: GroupedRunsViewProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   if (!runs || runs.length === 0) {
@@ -143,6 +152,16 @@ export function GroupedRunsView({ runs, onExpandRun, onExpandGroupDetails, empty
                   <span className="text-xs text-slate-400">
                     {sortedLayers.length} layer{sortedLayers.length > 1 ? "s" : ""}
                   </span>
+                  {showTrendsLinks && (
+                    <Link
+                      to={buildTrendsHref({ pipelineRunId: group.pipelineRunId })}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs font-medium text-sky-400 hover:text-sky-300 px-2.5 py-1 rounded border border-sky-500/30 hover:border-sky-500/60 hover:bg-sky-500/10 transition whitespace-nowrap"
+                      title="Analyze this run in Trends"
+                    >
+                      Trends
+                    </Link>
+                  )}
                   {onExpandGroupDetails && (
                     <button
                       onClick={(e) => {
@@ -190,6 +209,16 @@ export function GroupedRunsView({ runs, onExpandRun, onExpandGroupDetails, empty
                         <span className="text-xs text-slate-500">
                           {layer.StartTime}
                         </span>
+                        {showTrendsLinks && layer.RunId && (
+                          <Link
+                            to={buildTrendsHref({ runId: layer.RunId })}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-slate-400 hover:text-sky-300 hover:underline"
+                            title="Analyze this layer in Trends"
+                          >
+                            Layer trends
+                          </Link>
+                        )}
                         {onExpandRun && (
                           <button
                             onClick={(e) => {
