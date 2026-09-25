@@ -12,7 +12,10 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
-import pyodbc
+try:
+    import pyodbc
+except ImportError:
+    pyodbc = None  # type: ignore
 
 from app.config import settings
 
@@ -31,19 +34,22 @@ class FabricTokenManager:
             return cls._token_struct
 
         logger.info("Acquiring fresh Azure Entra ID access token for Fabric...")
-        res = subprocess.run(
-            "az account get-access-token --resource https://database.windows.net",
-            shell=True,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        data = json.loads(res.stdout)
-        access_token = data["accessToken"]
-        token_bytes = access_token.encode("utf-16-le")
-        cls._token_struct = struct.pack(f"<I{len(token_bytes)}s", len(token_bytes), token_bytes)
-        cls._expires_at = float(data.get("expires_on", now + 3000))
-        return cls._token_struct
+        try:
+            res = subprocess.run(
+                "az account get-access-token --resource https://database.windows.net",
+                shell=True,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            data = json.loads(res.stdout)
+            access_token = data["accessToken"]
+            token_bytes = access_token.encode("utf-16-le")
+            cls._token_struct = struct.pack(f"<I{len(token_bytes)}s", len(token_bytes), token_bytes)
+            cls._expires_at = float(data.get("expires_on", now + 3000))
+            return cls._token_struct
+        except Exception as exc:
+            raise RuntimeError(f"Azure CLI token acquisition failed: {exc}") from exc
 
 
 class FabricSyncState:
@@ -57,7 +63,11 @@ class FabricSyncState:
 state = FabricSyncState()
 
 
-def get_fabric_connection() -> pyodbc.Connection:
+def get_fabric_connection() -> Any:
+    if pyodbc is None:
+        raise RuntimeError(
+            "pyodbc is not installed. Direct Microsoft Fabric sync requires pyodbc and ODBC Driver 18 for SQL Server."
+        )
     token_struct = FabricTokenManager.get_token_struct()
     conn_str = (
         f"Driver={{ODBC Driver 18 for SQL Server}};"
@@ -108,6 +118,13 @@ def sync_from_fabric(lookback_days: int = 7, full_sync: bool = False) -> dict[st
     """
     if state.is_syncing:
         return {"status": "skipped", "reason": "Sync already in progress"}
+
+    if pyodbc is None:
+        logger.info("Fabric live sync skipped: pyodbc is not installed in this environment.")
+        return {"status": "skipped", "reason": "pyodbc is not installed"}
+
+    if not settings.fabric_sync_enabled:
+        return {"status": "skipped", "reason": "Fabric sync is disabled in settings"}
 
     state.is_syncing = True
     start_time = time.time()

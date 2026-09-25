@@ -16,3 +16,5 @@ services:
       # Rule-based chat works without API keys; switch to agent + GEMINI_API_KEY in dashboard later
       - key: CHAT_MODE
         value: rules
+      - key: FABRIC_SYNC_ENABLED
+        value: "false"
