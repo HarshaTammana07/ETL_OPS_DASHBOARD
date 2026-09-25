@@ -17,16 +17,10 @@ import type { FilterContext } from "../hooks/useFilterContext";
 
 const PAGE_SIZE = 50;
 
+import { formatCstShort } from "../utils/formatDate";
+
 function formatShortTime(value?: string): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value.slice(0, 19).replace("T", " ");
-  return d.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatCstShort(value);
 }
 
 function ActiveBadge({ value }: { value: string }) {

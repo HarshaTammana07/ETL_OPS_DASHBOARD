@@ -123,10 +123,11 @@ export const api = {
     get<{ runs: PipelineRun[] }>(`/pipelines/runs${toParams(filters)}`),
   pipelineLayers: (pipelineRunId: string) =>
     get<{ layers: Record<string, string>[] }>(`/pipelines/${encodeURIComponent(pipelineRunId)}/layers`),
-  runTasks: (runId: string, opts?: { pipelineRunId?: string; configId?: string }) => {
+  runTasks: (runId: string, opts?: { pipelineRunId?: string; configId?: string; limit?: number }) => {
     const params = new URLSearchParams();
     if (opts?.pipelineRunId) params.set("pipeline_run_id", opts.pipelineRunId);
     if (opts?.configId) params.set("config_id", opts.configId);
+    params.set("limit", String(opts?.limit ?? 5000));
     const qs = params.toString();
     return get<{
       tasks: {
@@ -188,11 +189,11 @@ export const api = {
     get<{ issues: Record<string, string>[]; total: number }>(`/data-quality/issues${toParams(filters)}`),
   searchRuns: (params: { runId?: string; pipelineRunId?: string; siteCode?: string; refDate?: string }) =>
     get<{ results: Record<string, string>[] }>(`/runs/search${toParams(params)}`),
-  notifications: (filters: Partial<GlobalFilters> & { limit?: number; offset?: number }) =>
+  notifications: (filters: Partial<GlobalFilters> & { limit?: number; offset?: number; q?: string }) =>
     get<{ items: NotificationAlert[]; total: number; limit: number; offset: number }>(
       `/notifications${toParams(filters)}`,
     ),
-  notificationSummary: (filters: Partial<GlobalFilters>) =>
+  notificationSummary: (filters: Partial<GlobalFilters> & { q?: string }) =>
     get<NotificationSummary>(`/notifications/summary${toParams(filters)}`),
   backfillNotifications: (filters: Partial<GlobalFilters> & { limit?: number }) =>
     post<{ inserted: number; skipped: number; scanned: number }>(
@@ -204,4 +205,20 @@ export const api = {
   chatPrompts: () => get<{ prompts: string[] }>("/chat/prompts"),
   chatConfig: () => get<{ mode: "agent" | "rules"; provider: string | null; model: string | null }>("/chat/config"),
   chat: (body: ChatRequestBody) => post<ChatResponse>("/chat", body, 90_000),
+  syncStatus: () =>
+    get<{
+      enabled: boolean;
+      intervalSeconds: number;
+      isSyncing: boolean;
+      lastSyncTime: string | null;
+      lastDurationSec: number | null;
+      lastError: string | null;
+      lastStats: Record<string, number> | null;
+    }>("/sync/status"),
+  triggerSync: (opts?: { lookbackDays?: number; fullSync?: boolean }) =>
+    post<{ status: string; duration_sec?: number; stats?: Record<string, number>; error?: string }>(
+      "/sync/trigger",
+      { lookback_days: opts?.lookbackDays ?? 7, full_sync: opts?.fullSync ?? false },
+      120_000,
+    ),
 };

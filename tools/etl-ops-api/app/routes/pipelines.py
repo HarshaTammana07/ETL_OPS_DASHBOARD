@@ -71,7 +71,7 @@ def run_tasks(
     run_id: str,
     pipeline_run_id: str | None = None,
     config_id: str | None = None,
-    limit: int = 50,
+    limit: int = 5000,
 ):
     """Taskaudit (+ queue fallback) details — includes ErrorMessage on failures, row counts on success."""
     return {
@@ -85,7 +85,7 @@ def run_tasks(
 
 
 @router.get("/by-pipeline-run/{pipeline_run_id}/tasks")
-def pipeline_run_tasks(pipeline_run_id: str, config_id: str | None = None, limit: int = 50):
+def pipeline_run_tasks(pipeline_run_id: str, config_id: str | None = None, limit: int = 5000):
     return {
         "tasks": queries.run_task_details(
             pipeline_run_id=pipeline_run_id,

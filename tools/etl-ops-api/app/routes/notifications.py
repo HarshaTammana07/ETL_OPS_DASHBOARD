@@ -38,6 +38,7 @@ def list_notifications(
     config_name: str | None = None,
     target_name: Literal["BR", "SL", "GL"] | None = None,
     source_system: str | None = None,
+    q: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ):
@@ -49,6 +50,7 @@ def list_notifications(
         config_name=config_name,
         target_name=target_name,
         source_system=source_system,
+        q=q,
         limit=limit,
         offset=offset,
     )
@@ -63,6 +65,7 @@ def notification_summary(
     start_date_to: date | None = None,
     config_name: str | None = None,
     target_name: Literal["BR", "SL", "GL"] | None = None,
+    q: str | None = None,
 ):
     filters = parse_filters(
         ref_date=ref_date,
@@ -71,6 +74,7 @@ def notification_summary(
         start_date_to=start_date_to,
         config_name=config_name,
         target_name=target_name,
+        q=q,
     )
     return notif_svc.notification_summary(filters)
 

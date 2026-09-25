@@ -18,6 +18,7 @@ def parse_filters(
     status: str | None = None,
     pipeline_run_id: str | None = None,
     run_id: str | None = None,
+    q: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> GlobalFilters:
@@ -34,6 +35,7 @@ def parse_filters(
         status=status,
         pipeline_run_id=pipeline_run_id,
         run_id=run_id,
+        q=q,
         limit=limit,
         offset=offset,
     )

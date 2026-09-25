@@ -784,7 +784,7 @@ def run_task_details(
     run_id: str | None = None,
     pipeline_run_id: str | None = None,
     config_id: str | None = None,
-    limit: int = 50,
+    limit: int = 5000,
 ) -> list[dict[str, Any]]:
     """Task-level detail for a pipeline layer run — prefer taskaudit (errors + row counts)."""
     if not run_id and not pipeline_run_id:
@@ -815,7 +815,12 @@ def run_task_details(
                 ta.Status,
                 ta.SiteCode,
                 ta.SiteName,
-                ta.DataBaseName,
+                COALESCE(
+                    NULLIF(ta.DataBaseName, ''),
+                    NULLIF(tq.DataBaseName, ''),
+                    (SELECT tq2.DataBaseName FROM taskqueue tq2 WHERE tq2.SiteCode = ta.SiteCode AND tq2.DataBaseName != '' LIMIT 1),
+                    ''
+                ) AS DataBaseName,
                 ta.RowsRead,
                 ta.RowsWritten,
                 ta.RowsFailed,
@@ -856,7 +861,12 @@ def run_task_details(
         queue_rows = conn.execute(
             f"""
             SELECT TaskId, TaskName, TargetTable AS TableName, '' AS StepName, Status,
-                   SiteCode, SiteName, DataBaseName,
+                   SiteCode, SiteName,
+                   COALESCE(
+                       NULLIF(DataBaseName, ''),
+                       (SELECT tq2.DataBaseName FROM taskqueue tq2 WHERE tq2.SiteCode = taskqueue.SiteCode AND tq2.DataBaseName != '' LIMIT 1),
+                       ''
+                   ) AS DataBaseName,
                    '' AS RowsRead, '' AS RowsWritten, '' AS RowsFailed, '' AS DurationSeconds,
                    StartTime, EndTime, substr(ErrorMessage, 1, 2000) AS ErrorMessage,
                    PipelineRunId, RunId

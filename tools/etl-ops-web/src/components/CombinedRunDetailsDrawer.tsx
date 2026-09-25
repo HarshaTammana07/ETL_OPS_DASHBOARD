@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { api } from "../api/client";
+import { CstTimeBadge } from "./CstTimeBadge";
 import { LayerBadge, StatusBadge } from "./StatusBadge";
 import type { PipelineRun } from "../types";
 
@@ -61,7 +62,7 @@ export function CombinedRunDetailsDrawer({
   const totalLayers = runs.length;
   const allSuccessful = runs.every((r) => r.Status === "SUCCESS");
   const totalFailedTasks = runs.reduce(
-    (sum, r) => sum + (parseInt(r.FailedTasks, 10) || 0),
+    (sum, r) => sum + (parseInt(r.FailedTasks || "0", 10) || 0),
     0
   );
 
@@ -124,7 +125,7 @@ export function CombinedRunDetailsDrawer({
             <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
               <div className="text-xs uppercase tracking-wide text-slate-400">Total Tasks</div>
               <div className="text-2xl font-bold text-slate-100 mt-1">
-                {sortedRuns.reduce((sum, r) => sum + (parseInt(r.TotalTasks, 10) || 0), 0)}
+                {sortedRuns.reduce((sum, r) => sum + (parseInt(r.TotalTasks || "0", 10) || 0), 0)}
               </div>
             </div>
           </div>
@@ -155,8 +156,8 @@ export function CombinedRunDetailsDrawer({
                               ? "Silver"
                               : "Gold"}
                         </div>
-                        <div className="text-xs text-slate-400 mt-0.5">
-                          {run.StartTime}
+                        <div className="mt-1">
+                          <CstTimeBadge time={run.StartTime} mode="short" />
                         </div>
                       </div>
                     </div>
@@ -167,7 +168,7 @@ export function CombinedRunDetailsDrawer({
                           {run.SuccessTasks || 0}/{run.TotalTasks || 0} tasks
                         </div>
                       </div>
-                      {parseInt(run.FailedTasks, 10) > 0 && (
+                      {parseInt(run.FailedTasks || "0", 10) > 0 && (
                         <span className="text-xs font-medium text-red-400 whitespace-nowrap">
                           {run.FailedTasks} failed
                         </span>
@@ -194,7 +195,7 @@ export function CombinedRunDetailsDrawer({
                   <tr className="hover:bg-slate-800/30">
                     <td className="px-3 py-2 text-slate-400">Total Success Tasks</td>
                     <td className="px-3 py-2 text-right text-emerald-400 font-medium">
-                      {sortedRuns.reduce((sum, r) => sum + (parseInt(r.SuccessTasks, 10) || 0), 0)}
+                      {sortedRuns.reduce((sum, r) => sum + (parseInt(r.SuccessTasks || "0", 10) || 0), 0)}
                     </td>
                   </tr>
                   <tr className="hover:bg-slate-800/30">
@@ -206,15 +207,15 @@ export function CombinedRunDetailsDrawer({
                   <tr className="hover:bg-slate-800/30">
                     <td className="px-3 py-2 text-slate-400">Total Tasks Executed</td>
                     <td className="px-3 py-2 text-right text-slate-200 font-medium">
-                      {sortedRuns.reduce((sum, r) => sum + (parseInt(r.TotalTasks, 10) || 0), 0)}
+                      {sortedRuns.reduce((sum, r) => sum + (parseInt(r.TotalTasks || "0", 10) || 0), 0)}
                     </td>
                   </tr>
                   <tr className="hover:bg-slate-800/30 bg-slate-800/20">
                     <td className="px-3 py-2 font-medium text-slate-300">Success Rate</td>
                     <td className="px-3 py-2 text-right text-slate-200 font-bold">
                       {(() => {
-                        const total = sortedRuns.reduce((sum, r) => sum + (parseInt(r.TotalTasks, 10) || 0), 0);
-                        const success = sortedRuns.reduce((sum, r) => sum + (parseInt(r.SuccessTasks, 10) || 0), 0);
+                        const total = sortedRuns.reduce((sum, r) => sum + (parseInt(r.TotalTasks || "0", 10) || 0), 0);
+                        const success = sortedRuns.reduce((sum, r) => sum + (parseInt(r.SuccessTasks || "0", 10) || 0), 0);
                         return total > 0 ? `${((success / total) * 100).toFixed(1)}%` : "—";
                       })()}
                     </td>

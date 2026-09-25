@@ -14,9 +14,13 @@ class Settings(BaseSettings):
     # Override with DATA_DIR env on hosts where repo layout differs
     data_dir: Path = Path(__file__).resolve().parents[3] / "DATA"
     sqlite_path: Path = Path(__file__).resolve().parents[1] / "data" / "sample.db"
-    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
-    # Allow Vercel preview/production origins when API is deployed
-    cors_origin_regex: str | None = r"https://.*\.vercel\.app"
+    cors_origins: list[str] = [
+        "http://localhost:5173", "http://127.0.0.1:5173",
+        "http://localhost:5180", "http://127.0.0.1:5180",
+        "http://localhost:3000", "http://127.0.0.1:3000",
+    ]
+    # Allow any localhost port + Vercel preview/production origins
+    cors_origin_regex: str | None = r"http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app"
     fabric_workspace_id: str = "c5097ffb-b78e-441d-9575-a82bac23cac8"
     fabric_experience: str = "fabric-developer"
     fabric_map_path: Path = Path(__file__).resolve().parents[3] / "DATA" / "fabric_pipeline_map.json"
@@ -37,7 +41,11 @@ class Settings(BaseSettings):
     # Notifications ingest (Fabric notebook dual-write). Empty = no auth in local dev.
     notifications_ingest_key: str | None = None
     # Public base URL notebooks should POST to (override in .env for deployed API)
-    notifications_ingest_url: str = "http://127.0.0.1:8000/api/notifications/ingest"
+    # Fabric SQL Sync & Live connection
+    fabric_sync_enabled: bool = True
+    fabric_sync_interval_seconds: int = 20
+    fabric_sql_server: str = "ziupvjpf2lfe3ey7dnmuxchh44-7n7qtrmow4oujflvvav2yi6kza.datawarehouse.fabric.microsoft.com"
+    fabric_database: str = "bhg_bronze"
 
 
 settings = Settings()

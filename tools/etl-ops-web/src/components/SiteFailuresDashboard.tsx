@@ -203,6 +203,8 @@ function ExpandableKpi({
   );
 }
 
+import { TablePaginationBar } from "./TablePaginationBar";
+
 export function SiteFailuresDashboard({
   overview,
   sites,
@@ -212,6 +214,9 @@ export function SiteFailuresDashboard({
 }: SiteFailuresDashboardProps) {
   const [expandedKpi, setExpandedKpi] = useState<KpiId | null>(null);
   const [theaterChart, setTheaterChart] = useState<ChartId | null>(null);
+  const [siteKpiPage, setSiteKpiPage] = useState(1);
+  const [siteKpiPageSize, setSiteKpiPageSize] = useState(10);
+  const [siteKpiSearch, setSiteKpiSearch] = useState("");
 
   const toggleKpi = (id: KpiId) => setExpandedKpi((prev) => (prev === id ? null : id));
 
@@ -227,6 +232,26 @@ export function SiteFailuresDashboard({
         })),
     [sites],
   );
+
+  const filteredTopSites = useMemo(() => {
+    const q = siteKpiSearch.trim().toLowerCase();
+    if (!q) return topSites;
+    return topSites.filter(
+      (s) =>
+        s.site.toLowerCase().includes(q) ||
+        (s.siteName || "").toLowerCase().includes(q)
+    );
+  }, [topSites, siteKpiSearch]);
+
+  const isAllKpi = siteKpiPageSize === -1;
+  const totalKpiPages = isAllKpi ? 1 : Math.max(1, Math.ceil(filteredTopSites.length / siteKpiPageSize));
+  const safeKpiPage = Math.min(Math.max(siteKpiPage, 1), totalKpiPages);
+
+  const pagedTopSites = useMemo(() => {
+    if (isAllKpi) return filteredTopSites;
+    const start = (safeKpiPage - 1) * siteKpiPageSize;
+    return filteredTopSites.slice(start, start + siteKpiPageSize);
+  }, [filteredTopSites, safeKpiPage, siteKpiPageSize, isAllKpi]);
 
   const byPipeline = useMemo(() => {
     const counts = new Map<string, number>();
@@ -438,27 +463,99 @@ export function SiteFailuresDashboard({
             </>
           )}
           {expandedKpi === "sites" && (
-            <>
-              <h4 className="mb-2 text-xs font-semibold text-slate-300">All sites ({topSites.length})</h4>
-              <div className="max-h-[200px] overflow-y-auto rounded border border-slate-800">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-xs font-semibold text-slate-300">
+                  All sites ({filteredTopSites.length}{siteKpiSearch ? ` / ${topSites.length}` : ""})
+                </h4>
+                <div className="relative min-w-[200px] max-w-xs">
+                  <input
+                    type="text"
+                    value={siteKpiSearch}
+                    onChange={(e) => {
+                      setSiteKpiSearch(e.target.value);
+                      setSiteKpiPage(1);
+                    }}
+                    placeholder="Search site code or name..."
+                    className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-0.5 text-xs text-slate-200 placeholder-slate-500 focus:border-sky-500 focus:outline-none"
+                  />
+                  {siteKpiSearch && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSiteKpiSearch("");
+                        setSiteKpiPage(1);
+                      }}
+                      className="absolute right-1.5 top-0.5 text-xs text-slate-400 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Top Pagination */}
+              <TablePaginationBar
+                page={safeKpiPage}
+                totalPages={totalKpiPages}
+                totalItems={filteredTopSites.length}
+                pageSize={siteKpiPageSize}
+                onPageChange={setSiteKpiPage}
+                onPageSizeChange={setSiteKpiPageSize}
+                pageSizeOptions={[5, 10, 25, 50, -1]}
+                label="failing sites"
+              />
+
+              <div className="overflow-hidden rounded border border-slate-800">
                 <table className="min-w-full text-[11px]">
-                  <thead className="sticky top-0 bg-slate-900 text-slate-500">
+                  <thead className="bg-slate-900 text-slate-400 uppercase tracking-wide">
                     <tr>
-                      <th className="px-2 py-1 text-left">Site</th>
-                      <th className="px-2 py-1 text-right">Failures</th>
+                      <th className="px-2.5 py-1.5 text-left font-medium">Site</th>
+                      <th className="px-2.5 py-1.5 text-left font-medium">Clinic Name</th>
+                      <th className="px-2.5 py-1.5 text-right font-medium">Failures</th>
+                      <th className="px-2.5 py-1.5 text-right font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/80">
-                    {topSites.map((s) => (
-                      <tr key={s.site} className="cursor-pointer hover:bg-slate-800/60" onClick={() => onSelectSite?.(s.site)}>
-                        <td className="px-2 py-0.5 text-sky-300">{s.site}</td>
-                        <td className="px-2 py-0.5 text-right tabular-nums text-red-300">{s.failures}</td>
+                    {pagedTopSites.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-3 py-4 text-center text-slate-500">
+                          No sites match "{siteKpiSearch}"
+                        </td>
                       </tr>
-                    ))}
+                    ) : (
+                      pagedTopSites.map((s) => (
+                        <tr
+                          key={s.site}
+                          className="cursor-pointer hover:bg-slate-800/60"
+                          onClick={() => onSelectSite?.(s.site)}
+                          title={`View failures for ${s.site}`}
+                        >
+                          <td className="px-2.5 py-1 font-semibold text-sky-300">{s.site}</td>
+                          <td className="px-2.5 py-1 text-slate-400 truncate max-w-[200px]">{s.siteName || "—"}</td>
+                          <td className="px-2.5 py-1 text-right tabular-nums text-red-300 font-medium">{s.failures}</td>
+                          <td className="px-2.5 py-1 text-right">
+                            <span className="text-sky-400 hover:underline text-[10px]">Open details ›</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
-            </>
+
+              {/* Bottom Pagination */}
+              <TablePaginationBar
+                page={safeKpiPage}
+                totalPages={totalKpiPages}
+                totalItems={filteredTopSites.length}
+                pageSize={siteKpiPageSize}
+                onPageChange={setSiteKpiPage}
+                onPageSizeChange={setSiteKpiPageSize}
+                pageSizeOptions={[5, 10, 25, 50, -1]}
+                label="failing sites"
+              />
+            </div>
           )}
           {expandedKpi === "avg" && (
             <div className="grid gap-2 sm:grid-cols-3 text-xs">

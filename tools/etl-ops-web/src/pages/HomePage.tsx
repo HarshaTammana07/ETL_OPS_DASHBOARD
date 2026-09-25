@@ -5,7 +5,6 @@ import { api, apiConnectionHint } from "../api/client";
 import { CombinedRunDetailsDrawer } from "../components/CombinedRunDetailsDrawer";
 import { GroupedRunsView } from "../components/GroupedRunsView";
 import { RunDetailsDrawer } from "../components/RunDetailsDrawer";
-import { KpiCard } from "../components/KpiCard";
 import { TablePagination } from "../components/TablePagination";
 import { formatDateRange } from "../hooks/useGlobalFilters";
 import type { RunMeta } from "../components/FabricLink";
