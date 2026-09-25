@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
+import { CstTimeBadge } from "./CstTimeBadge";
 import { LayerBadge, StatusBadge } from "./StatusBadge";
 import { buildTrendsHref } from "./TrendsScopeBar";
 import type { PipelineRun } from "../types";
@@ -112,7 +113,7 @@ export function GroupedRunsView({
           getLayerOrder(a.TargetName) - getLayerOrder(b.TargetName)
         );
         const totalFailedTasks = group.layers.reduce(
-          (sum, r) => sum + (parseInt(r.FailedTasks, 10) || 0),
+          (sum, r) => sum + (parseInt(r.FailedTasks || "0", 10) || 0),
           0
         );
 
@@ -135,9 +136,12 @@ export function GroupedRunsView({
                     <h3 className="font-medium text-slate-100 truncate">
                       {group.pipelineName}
                     </h3>
-                    <p className="text-xs text-slate-500">
-                      Run ID: {group.pipelineRunId} • {group.startTime}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <CstTimeBadge time={group.startTime} />
+                      <span className="text-[11px] font-mono text-slate-500 truncate" title={group.pipelineRunId}>
+                        Run ID: {group.pipelineRunId}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -183,7 +187,7 @@ export function GroupedRunsView({
               <div className="bg-slate-950/50 border-t border-slate-800">
                 {sortedLayers.map((layer, idx) => (
                   <div
-                    key={`${layer.PipelineRunId}-${layer.TargetName}`}
+                    key={`${layer.RunId || layer.PipelineRunId}-${layer.TargetName}-${idx}`}
                     className={clsx(
                       "px-6 py-2.5 border-l-4 text-sm",
                       layer.TargetName === "BR" || layer.TargetName === "BRZ"
@@ -206,9 +210,7 @@ export function GroupedRunsView({
                             {layer.FailedTasks} failed
                           </span>
                         )}
-                        <span className="text-xs text-slate-500">
-                          {layer.StartTime}
-                        </span>
+                        <CstTimeBadge time={layer.StartTime} mode="short" />
                         {showTrendsLinks && layer.RunId && (
                           <Link
                             to={buildTrendsHref({ runId: layer.RunId })}

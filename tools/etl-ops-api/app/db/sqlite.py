@@ -111,6 +111,8 @@ def ensure_sample_db(force: bool = False) -> Path:
 
 def get_connection() -> sqlite3.Connection:
     ensure_sample_db()
-    conn = sqlite3.connect(settings.sqlite_path)
+    conn = sqlite3.connect(settings.sqlite_path, timeout=30.0)
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA busy_timeout = 30000")
     conn.row_factory = sqlite3.Row
     return conn

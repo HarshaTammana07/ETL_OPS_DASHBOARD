@@ -18,6 +18,7 @@ class GlobalFilters(BaseModel):
     pipeline_run_id: str | None = None
     run_id: str | None = None
     is_active: bool | None = None
+    q: str | None = None
     limit: int = Field(50, ge=1, le=500)
     offset: int = Field(0, ge=0)
 

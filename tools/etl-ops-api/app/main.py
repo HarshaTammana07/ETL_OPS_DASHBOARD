@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,14 +7,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.sqlite import ensure_sample_db
 from app.db.notifications import ensure_notifications_table
-from app.routes import chat, dataquality, failures, health, kpis, notifications, pipelines, runs, trends
+from app.routes import chat, dataquality, failures, health, kpis, notifications, pipelines, runs, sync, trends
+from app.services.fabric_sync import run_periodic_sync_loop
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     ensure_sample_db()
     ensure_notifications_table()
-    yield
+    sync_task = asyncio.create_task(run_periodic_sync_loop())
+    try:
+        yield
+    finally:
+        sync_task.cancel()
+        try:
+            await sync_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
@@ -40,4 +50,5 @@ app.include_router(failures.router)
 app.include_router(dataquality.router)
 app.include_router(runs.router)
 app.include_router(notifications.router)
+app.include_router(sync.router)
 app.include_router(chat.router)

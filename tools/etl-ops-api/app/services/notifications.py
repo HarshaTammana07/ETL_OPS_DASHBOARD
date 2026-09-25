@@ -134,6 +134,12 @@ def ingest_notification(payload: NotificationIngest) -> dict[str, Any]:
 
 def list_notifications(filters: GlobalFilters, *, limit: int = 50, offset: int = 0) -> dict[str, Any]:
     ensure_notifications_table()
+    # Seamlessly auto-seed alerts from audit so alerts are 100% dynamic for any date range
+    try:
+        backfill_from_audit(filters, limit=300)
+    except Exception as exc:
+        logger.warning(f"Auto-backfill alerts notice: {exc}")
+
     date_sql, date_params = _date_range_clause("COALESCE(NULLIF(StartTime,''), CreatedAt)", filters)
 
     clauses = ["Status = 'FAILED'", date_sql]
@@ -149,6 +155,12 @@ def list_notifications(filters: GlobalFilters, *, limit: int = 50, offset: int =
     if filters.source_system:
         clauses.append("SourceSystem LIKE ?")
         params.append(f"%{filters.source_system}%")
+    if getattr(filters, "q", None) and str(filters.q).strip():
+        q_term = f"%{str(filters.q).strip()}%"
+        clauses.append(
+            "(PipelineName LIKE ? OR ConfigName LIKE ? OR ErrorSummary LIKE ? OR FailureDetails LIKE ? OR RunId LIKE ? OR PipelineRunId LIKE ?)"
+        )
+        params.extend([q_term] * 6)
 
     where = " AND ".join(clauses)
 
@@ -178,6 +190,12 @@ def list_notifications(filters: GlobalFilters, *, limit: int = 50, offset: int =
 
 def notification_summary(filters: GlobalFilters) -> dict[str, Any]:
     ensure_notifications_table()
+    # Seamlessly auto-seed alerts from audit so summary stats are 100% dynamic
+    try:
+        backfill_from_audit(filters, limit=300)
+    except Exception as exc:
+        logger.warning(f"Auto-backfill alerts notice: {exc}")
+
     date_sql, date_params = _date_range_clause("COALESCE(NULLIF(StartTime,''), CreatedAt)", filters)
 
     clauses = ["Status = 'FAILED'", date_sql]
@@ -189,6 +207,12 @@ def notification_summary(filters: GlobalFilters) -> dict[str, Any]:
     if filters.target_name:
         clauses.append("TargetName = ?")
         params.append(filters.target_name)
+    if getattr(filters, "q", None) and str(filters.q).strip():
+        q_term = f"%{str(filters.q).strip()}%"
+        clauses.append(
+            "(PipelineName LIKE ? OR ConfigName LIKE ? OR ErrorSummary LIKE ? OR FailureDetails LIKE ? OR RunId LIKE ? OR PipelineRunId LIKE ?)"
+        )
+        params.extend([q_term] * 6)
 
     where = " AND ".join(clauses)
 
