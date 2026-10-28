@@ -4,6 +4,8 @@ import clsx from "clsx";
 import { CstTimeBadge } from "./CstTimeBadge";
 import { LayerBadge, StatusBadge } from "./StatusBadge";
 import { buildTrendsHref } from "./TrendsScopeBar";
+import { FabricLink } from "./FabricLink";
+import { DurationBadge } from "./DurationBadge";
 import type { PipelineRun } from "../types";
 
 interface GroupedRunsViewProps {
@@ -19,6 +21,7 @@ interface GroupedRun {
   configName: string;
   pipelineName: string;
   startTime: string;
+  endTime?: string;
   layers: PipelineRun[];
   overallStatus: "SUCCESS" | "FAILED" | "RUNNING" | "MIXED";
 }
@@ -36,6 +39,7 @@ function groupRunsByPipelineId(runs: PipelineRun[]): GroupedRun[] {
         configName: run.ConfigName,
         pipelineName: run.PipelineName || run.ConfigName,
         startTime: run.StartTime,
+        endTime: run.EndTime,
         layers: [],
         overallStatus: "SUCCESS",
       });
@@ -44,14 +48,19 @@ function groupRunsByPipelineId(runs: PipelineRun[]): GroupedRun[] {
     const group = grouped.get(key)!;
     group.layers.push(run);
 
+    if (run.StartTime && (!group.startTime || run.StartTime < group.startTime)) {
+      group.startTime = run.StartTime;
+    }
+    if (run.EndTime && (!group.endTime || run.EndTime > group.endTime)) {
+      group.endTime = run.EndTime;
+    }
+
     // Calculate overall status
     const statuses = group.layers.map((r) => r.Status);
     if (statuses.some((s) => s === "FAILED")) {
       group.overallStatus = "FAILED";
-    } else if (statuses.some((s) => s === "RUNNING")) {
-      if (group.overallStatus !== "FAILED") {
-        group.overallStatus = "RUNNING";
-      }
+    } else if (statuses.some((s) => s === "RUNNING") || group.layers.some((r) => !r.EndTime && r.Status !== "SUCCESS" && r.Status !== "FAILED")) {
+      group.overallStatus = "RUNNING";
     } else if (statuses.every((s) => s === "SUCCESS")) {
       group.overallStatus = "SUCCESS";
     } else {
@@ -148,6 +157,7 @@ export function GroupedRunsView({
                 {/* Status summary and actions */}
                 <div className="flex items-center gap-3 whitespace-nowrap">
                   <StatusBadge status={group.overallStatus} />
+                  <DurationBadge startTime={group.startTime} endTime={group.endTime} status={group.overallStatus} prefix="Total" />
                   {totalFailedTasks > 0 && (
                     <span className="text-xs font-medium text-red-400">
                       {totalFailedTasks} failed task{totalFailedTasks > 1 ? "s" : ""}
@@ -203,8 +213,9 @@ export function GroupedRunsView({
                         <span className="text-slate-300">{layer.TargetName === "BR" || layer.TargetName === "BRZ" ? "Bronze" : layer.TargetName === "SL" ? "Silver" : "Gold"}</span>
                       </div>
 
-                      <div className="flex items-center gap-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3 whitespace-nowrap">
                         <StatusBadge status={layer.Status} />
+                        <DurationBadge startTime={layer.StartTime} endTime={layer.EndTime} status={layer.Status} />
                         {layer.FailedTasks !== "0" && (
                           <span className="text-xs font-medium text-red-400">
                             {layer.FailedTasks} failed
@@ -221,6 +232,7 @@ export function GroupedRunsView({
                             Layer trends
                           </Link>
                         )}
+                        <FabricLink url={(layer as any).fabricUrl} meta={layer as any} label="Fabric" />
                         {onExpandRun && (
                           <button
                             onClick={(e) => {

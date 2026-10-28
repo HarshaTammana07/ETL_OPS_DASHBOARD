@@ -182,7 +182,7 @@ export function GlobalFilterBar({ filters, setFilters }: GlobalFilterBarProps) {
         </label>
 
         {/* Pipeline Filter */}
-        <label className="flex min-w-[180px] flex-col gap-1 text-xs text-slate-400">
+        <label className="flex min-w-[220px] flex-col gap-1 text-xs text-slate-400">
           Pipeline
           <PipelineFilter value={filters.configName} onChange={(configName) => setFilters({ configName })} />
         </label>

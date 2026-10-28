@@ -154,8 +154,16 @@ function RunMetaPopover({
     value: meta[key]?.toString().trim(),
   })).filter((e) => e.value);
 
+  const isRunDeepLink = url ? /\/pipelines\/[0-9a-fA-F-]{36}\/[0-9a-fA-F-]{36}/.test(url) : false;
+  const isCanvasLink = url ? /\/pipelines\/[0-9a-fA-F-]{36}(\?|$)/.test(url) : false;
+
   if (url) {
-    entries.push({ label: "Fabric URL", value: url });
+    const urlLabel = isRunDeepLink
+      ? "Fabric Run (Deep-link)"
+      : isCanvasLink
+        ? "Fabric Pipeline Canvas"
+        : "Fabric Monitoring Hub";
+    entries.push({ label: urlLabel, value: url });
   }
 
   const failedTasks = tasks.filter((t) => t.Status === "FAILED" && (t.ErrorMessage || t.TaskName));
@@ -344,6 +352,14 @@ function RunLinkWithPopover({
     className,
   );
 
+  const isRunDeepLink = url ? /\/pipelines\/[0-9a-fA-F-]{36}\/[0-9a-fA-F-]{36}/.test(url) : false;
+  const isCanvasLink = url ? /\/pipelines\/[0-9a-fA-F-]{36}(\?|$)/.test(url) : false;
+  const linkTitle = isRunDeepLink
+    ? "Open run execution in Microsoft Fabric"
+    : isCanvasLink
+      ? "Open pipeline canvas in Microsoft Fabric"
+      : "Open Fabric workspace Monitoring Hub";
+
   const trigger =
     variant === "link" && url ? (
       <a
@@ -352,6 +368,7 @@ function RunLinkWithPopover({
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
         className={triggerClass}
+        title={linkTitle}
       >
         <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
           <path

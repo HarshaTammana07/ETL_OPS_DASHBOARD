@@ -4,6 +4,8 @@ import { createPortal } from "react-dom";
 import { api } from "../api/client";
 import { CstTimeBadge } from "./CstTimeBadge";
 import { LayerBadge, StatusBadge } from "./StatusBadge";
+import { DurationBadge } from "./DurationBadge";
+import { formatDuration, formatElapsedDuration } from "../utils/formatDate";
 import type { PipelineRun } from "../types";
 
 interface CombinedRunDetailsDrawerProps {
@@ -61,10 +63,33 @@ export function CombinedRunDetailsDrawer({
   const pipelineName = runs[0]?.ConfigName || runs[0]?.PipelineName || "Unknown";
   const totalLayers = runs.length;
   const allSuccessful = runs.every((r) => r.Status === "SUCCESS");
+  const anyRunning = runs.some((r) => r.Status === "RUNNING" || (!r.EndTime && !!r.StartTime));
   const totalFailedTasks = runs.reduce(
     (sum, r) => sum + (parseInt(r.FailedTasks || "0", 10) || 0),
     0
   );
+
+  // Calculate duration across all runs in this group
+  let earliestStart: string | null = null;
+  let latestEnd: string | null = null;
+  for (const r of runs) {
+    if (r.StartTime) {
+      if (!earliestStart || new Date(r.StartTime).getTime() < new Date(earliestStart).getTime()) {
+        earliestStart = r.StartTime;
+      }
+    }
+    if (r.EndTime) {
+      if (!latestEnd || new Date(r.EndTime).getTime() > new Date(latestEnd).getTime()) {
+        latestEnd = r.EndTime;
+      }
+    }
+  }
+
+  const totalDurationText = earliestStart
+    ? anyRunning
+      ? formatElapsedDuration(earliestStart)
+      : formatDuration(earliestStart, latestEnd)
+    : "—";
 
   const sortedRuns = [...runs].sort((a, b) => {
     const orderA = a.TargetName === "BR" || a.TargetName === "BRZ" ? 1 : a.TargetName === "SL" ? 2 : 3;
@@ -87,7 +112,17 @@ export function CombinedRunDetailsDrawer({
         <div className="sticky top-0 z-10 border-b border-slate-700 bg-slate-900/95 p-4 backdrop-blur">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-100">{pipelineName}</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-semibold text-slate-100">{pipelineName}</h2>
+                {earliestStart && (
+                  <DurationBadge
+                    startTime={earliestStart}
+                    endTime={latestEnd}
+                    status={anyRunning ? "RUNNING" : allSuccessful ? "SUCCESS" : "FAILED"}
+                    prefix="Total"
+                  />
+                )}
+              </div>
               <p className="text-xs text-slate-400 mt-1">
                 Pipeline Run ID: <code className="text-slate-300">{pipelineRunId}</code>
               </p>
@@ -105,7 +140,7 @@ export function CombinedRunDetailsDrawer({
         {/* Content */}
         <div className="p-4 space-y-6">
           {/* Summary Stats */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
               <div className="text-xs uppercase tracking-wide text-slate-400">Total Layers</div>
               <div className="text-2xl font-bold text-slate-100 mt-1">{totalLayers}</div>
@@ -117,12 +152,18 @@ export function CombinedRunDetailsDrawer({
               </div>
             </div>
             <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
+              <div className="text-xs uppercase tracking-wide text-slate-400">Total Duration</div>
+              <div className="text-xl font-bold text-cyan-300 mt-1 font-mono">
+                {totalDurationText}
+              </div>
+            </div>
+            <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
               <div className="text-xs uppercase tracking-wide text-slate-400">Failed Tasks</div>
               <div className={`text-2xl font-bold mt-1 ${totalFailedTasks > 0 ? "text-red-400" : "text-emerald-400"}`}>
                 {totalFailedTasks}
               </div>
             </div>
-            <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
+            <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3 md:col-span-2">
               <div className="text-xs uppercase tracking-wide text-slate-400">Total Tasks</div>
               <div className="text-2xl font-bold text-slate-100 mt-1">
                 {sortedRuns.reduce((sum, r) => sum + (parseInt(r.TotalTasks || "0", 10) || 0), 0)}
@@ -162,9 +203,12 @@ export function CombinedRunDetailsDrawer({
                       </div>
                     </div>
                     <div className="flex items-center gap-3 text-right">
-                      <div>
-                        <StatusBadge status={run.Status} />
-                        <div className="text-xs text-slate-400 mt-1">
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-2">
+                          <DurationBadge startTime={run.StartTime} endTime={run.EndTime} status={run.Status} />
+                          <StatusBadge status={run.Status} />
+                        </div>
+                        <div className="text-xs text-slate-400">
                           {run.SuccessTasks || 0}/{run.TotalTasks || 0} tasks
                         </div>
                       </div>

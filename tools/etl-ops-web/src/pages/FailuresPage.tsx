@@ -67,8 +67,8 @@ function FailedTasksTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800/80">
-          {failures.map((row) => {
-            const rowKey = `${row.TaskId || row.PipelineRunId}-${row.StartTime}`;
+          {failures.map((row, idx) => {
+            const rowKey = `${row.TaskId || row.PipelineRunId}-${row.StartTime}-${row.SiteCode || ""}-${idx}`;
             return (
               <tr
                 key={rowKey}

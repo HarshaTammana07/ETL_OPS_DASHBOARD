@@ -7,8 +7,9 @@ import { buildTrendsHref } from "./TrendsScopeBar";
 import type { RunMeta } from "./FabricLink";
 import { CstTimeBadge } from "./CstTimeBadge";
 import { FabricLink } from "./FabricLink";
+import { DurationBadge } from "./DurationBadge";
 import { LayerBadge, StatusBadge } from "./StatusBadge";
-import { formatCstDateTime } from "../utils/formatDate";
+import { formatCstDateTime, formatDuration, formatElapsedDuration } from "../utils/formatDate";
 
 function formatNumber(val?: string | number): string {
   if (val === undefined || val === null || val === "") return "0";
@@ -163,6 +164,7 @@ Failed Tasks: ${failedTasks.length} / ${allTasks.length}
             <div className="flex flex-wrap items-center gap-2">
               {meta.TargetName && <LayerBadge layer={meta.TargetName} />}
               {meta.Status && <StatusBadge status={meta.Status} />}
+              <DurationBadge startTime={meta.StartTime} endTime={meta.EndTime} status={meta.Status} />
               {meta.StartTime && <CstTimeBadge time={meta.StartTime} mode="short" />}
               {meta.EndTime && <span className="text-xs text-slate-500">→</span>}
               {meta.EndTime && <CstTimeBadge time={meta.EndTime} mode="timeOnly" subtle />}
@@ -180,12 +182,18 @@ Failed Tasks: ${failedTasks.length} / ${allTasks.length}
         {/* Content Body */}
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
           {/* Metadata Cards */}
-          <section className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          <section className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
             {[
               ["Pipeline Run ID", meta.PipelineRunId],
               ["Run ID", meta.RunId],
               ["Config ID", meta.ConfigId],
               ["Fabric Pipeline", meta.PipelineName],
+              [
+                "Total Duration",
+                meta.Status === "RUNNING"
+                  ? `${formatElapsedDuration(meta.StartTime)} running`
+                  : formatDuration(meta.StartTime, meta.EndTime),
+              ],
             ].map(([label, value]) =>
               value ? (
                 <div key={label} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
@@ -227,7 +235,30 @@ Failed Tasks: ${failedTasks.length} / ${allTasks.length}
                 Open in Run Explorer
               </Link>
             )}
-            <FabricLink url={meta.fabricUrl} meta={meta} label="Open in Fabric" />
+            {(() => {
+              const effectiveUrl =
+                meta.fabricUrl ||
+                `https://app.fabric.microsoft.com/groups/c5097ffb-b78e-441d-9575-a82bac23cac8/monitoringhub?experience=fabric-developer&ctid=a5fa28ca-d2e5-4dca-931f-1b594b88e7e7&login_hint=Harsha.Tammana.seanergy@bhgrecovery.onmicrosoft.com`;
+              return (
+                <a
+                  href={effectiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 px-3 py-1.5 text-xs font-medium text-sky-200 hover:bg-sky-500/30 hover:text-white transition-colors"
+                  title="Open directly in Microsoft Fabric"
+                >
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                  Open in Fabric
+                </a>
+              );
+            })()}
           </div>
 
           {/* Task Audit Section */}

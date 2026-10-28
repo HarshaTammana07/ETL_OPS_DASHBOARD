@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     # Allow any localhost port + Vercel preview/production origins
     cors_origin_regex: str | None = r"http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.vercel\.app"
     fabric_workspace_id: str = "c5097ffb-b78e-441d-9575-a82bac23cac8"
+    fabric_tenant_id: str = "a5fa28ca-d2e5-4dca-931f-1b594b88e7e7"
+    fabric_login_hint: str | None = "Harsha.Tammana.seanergy@bhgrecovery.onmicrosoft.com"
     fabric_experience: str = "fabric-developer"
     fabric_map_path: Path = Path(__file__).resolve().parents[3] / "DATA" / "fabric_pipeline_map.json"
 

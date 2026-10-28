@@ -218,7 +218,12 @@ export function RunExplorerPage() {
             PipelineRunId: run.PipelineRunId,
             ConfigId: run.ConfigId || "",
             ConfigName: run.ConfigName,
+            PipelineName: run.PipelineName,
             TargetName: run.TargetName,
+            Status: run.Status,
+            StartTime: run.StartTime,
+            EndTime: run.EndTime,
+            fabricUrl: (run as any).fabricUrl,
           });
         }}
         onExpandGroupDetails={(pipelineRunId, runs) => {

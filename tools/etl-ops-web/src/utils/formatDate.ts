@@ -100,3 +100,53 @@ export function formatCstDate(value?: string | null): string {
   });
 }
 
+/** Formats duration between start and end times into a human-readable string (e.g. "45s", "2m 15s", "1h 05m") */
+export function formatDuration(start?: string | Date | null, end?: string | Date | null): string {
+  if (!start) return "—";
+  const startDate = start instanceof Date ? start : parseUtcDate(start);
+  if (!startDate) return "—";
+
+  const endDate = end ? (end instanceof Date ? end : parseUtcDate(end)) : null;
+  if (!endDate) return "—";
+
+  const diffMs = endDate.getTime() - startDate.getTime();
+  if (diffMs < 0) return "0s";
+
+  const totalSec = Math.floor(diffMs / 1000);
+  if (totalSec < 60) {
+    return `${totalSec}s`;
+  }
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  if (mins < 60) {
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  }
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return remMins > 0 ? `${hours}h ${remMins}m` : `${hours}h`;
+}
+
+/** For currently running jobs (where end time is null), computes elapsed time since start */
+export function formatElapsedDuration(start?: string | Date | null): string {
+  if (!start) return "—";
+  const startDate = start instanceof Date ? start : parseUtcDate(start);
+  if (!startDate) return "—";
+
+  const diffMs = Date.now() - startDate.getTime();
+  if (diffMs < 0) return "0s";
+
+  const totalSec = Math.floor(diffMs / 1000);
+  if (totalSec < 60) {
+    return `${totalSec}s`;
+  }
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+  if (mins < 60) {
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  }
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return remMins > 0 ? `${hours}h ${remMins}m` : `${hours}h`;
+}
+
+
